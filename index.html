@@ -8,7 +8,6 @@
   <meta name="apple-mobile-web-app-title" content="MenudaMovie"/>
   <meta name="theme-color" content="#03060f"/>
   <title>MM Menuda Movie</title>
-  <link rel="manifest" href="manifest.json"/>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { background: #03060f; font-family: system-ui, sans-serif; }
@@ -22,14 +21,7 @@
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <script type="text/babel" data-presets="react">
 
-// ── Storage (localStorage replacement) ──────────────────────────────────────
-const storage = {
-  get: (key) => { const v = localStorage.getItem(key); return v ? { value: v } : null; },
-  set: (key, value) => { localStorage.setItem(key, value); return true; },
-};
-window.storage = storage;
-
-// ── Constants ────────────────────────────────────────────────────────────────
+const TMDB_KEY = "080819d6debe8bdd42f10a6e9c15f7ce";
 const ACCENT = "#00d4ff";
 const BG = "#03060f";
 const PANEL = "#0a0e18";
@@ -55,54 +47,26 @@ const PIXEL_GRIDS = {
   "Documentales":[[0,1,1,1,1,1,1,1,1,1,1,0,1,1,1,0],[0,1,0,0,0,0,0,0,0,0,1,0,1,0,1,0],[0,1,0,0,0,0,0,0,0,0,1,0,1,1,1,0],[0,1,0,0,1,0,0,0,0,0,1,0,0,0,0,0],[0,1,0,0,1,1,0,0,0,0,1,0,0,0,0,0],[0,1,0,0,1,1,1,0,0,0,1,0,0,0,0,0],[0,1,0,0,1,1,0,0,0,0,1,0,0,0,0,0],[0,1,0,0,1,0,0,0,0,0,1,0,0,0,0,0],[0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0],[0,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],
   "Charlas":[[0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],[1,1,0,0,0,0,0,0,0,0,0,0,0,1,1,0],[1,1,0,1,0,1,0,1,0,1,0,1,0,1,1,0],[1,1,0,0,0,0,0,0,0,0,0,0,0,1,1,0],[1,1,0,1,0,1,0,1,0,1,0,0,0,1,1,0],[1,1,0,0,0,0,0,0,0,0,0,0,0,1,1,0],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],[0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0],[0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],
 };
-const SMILE_HAPPY = [[0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0],[0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0],[0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],[1,1,1,1,2,2,1,1,1,1,1,2,2,1,1,1,1],[1,1,1,1,2,2,1,1,1,1,1,2,2,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,2,1,1,1,1,1,1,1,1,1,2,1,1,1],[1,1,1,1,2,1,1,1,1,1,1,1,2,1,1,1,1],[1,1,1,1,1,2,2,2,2,2,2,2,1,1,1,1,1],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],[0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0],[0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0],[0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0]];
-const SMILE_FLAT = [[0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0],[0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0],[0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],[1,1,1,1,2,2,1,1,1,1,1,2,2,1,1,1,1],[1,1,1,1,2,2,1,1,1,1,1,2,2,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,2,2,2,2,2,2,2,2,2,2,2,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],[0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0],[0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0],[0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0]];
-const VHS_TAPE = [[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],[1,0,2,2,2,2,2,2,2,2,2,2,2,2,2,0,1],[1,0,2,0,0,0,0,0,0,0,0,0,0,0,2,0,1],[1,0,2,0,0,0,0,0,0,0,0,0,0,0,2,0,1],[1,0,2,2,2,2,2,2,2,2,2,2,2,2,2,0,1],[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],[1,1,1,0,0,0,0,0,0,0,0,0,0,0,1,1,1],[1,1,1,0,3,3,3,0,0,0,3,3,3,0,1,1,1],[1,1,1,0,3,3,3,0,0,0,3,3,3,0,1,1,1],[1,1,1,0,0,0,0,0,0,0,0,0,0,0,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]];
-const LOGO_PHASES = [{grid:SMILE_HAPPY,dur:3000},{grid:SMILE_FLAT,dur:800},{grid:VHS_TAPE,dur:2500},{grid:SMILE_FLAT,dur:800}];
+const SMILE_HAPPY=[[0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0],[0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0],[0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],[1,1,1,1,2,2,1,1,1,1,1,2,2,1,1,1,1],[1,1,1,1,2,2,1,1,1,1,1,2,2,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,2,1,1,1,1,1,1,1,1,1,2,1,1,1],[1,1,1,1,2,1,1,1,1,1,1,1,2,1,1,1,1],[1,1,1,1,1,2,2,2,2,2,2,2,1,1,1,1,1],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],[0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0],[0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0],[0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0]];
+const SMILE_FLAT=[[0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0],[0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0],[0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],[1,1,1,1,2,2,1,1,1,1,1,2,2,1,1,1,1],[1,1,1,1,2,2,1,1,1,1,1,2,2,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,2,2,2,2,2,2,2,2,2,2,2,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],[0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0],[0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0],[0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0]];
+const VHS_TAPE=[[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],[1,0,2,2,2,2,2,2,2,2,2,2,2,2,2,0,1],[1,0,2,0,0,0,0,0,0,0,0,0,0,0,2,0,1],[1,0,2,0,0,0,0,0,0,0,0,0,0,0,2,0,1],[1,0,2,2,2,2,2,2,2,2,2,2,2,2,2,0,1],[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],[1,1,1,0,0,0,0,0,0,0,0,0,0,0,1,1,1],[1,1,1,0,3,3,3,0,0,0,3,3,3,0,1,1,1],[1,1,1,0,3,3,3,0,0,0,3,3,3,0,1,1,1],[1,1,1,0,0,0,0,0,0,0,0,0,0,0,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]];
+const LOGO_PHASES=[{grid:SMILE_HAPPY,dur:3000},{grid:SMILE_FLAT,dur:800},{grid:VHS_TAPE,dur:2500},{grid:SMILE_FLAT,dur:800}];
 
 const { useState, useEffect, useRef } = React;
 
-function LogoBase({ size }) {
-  const [phase, setPhase] = useState(0);
-  const [glitching, setGlitching] = useState(false);
-  useEffect(() => {
-    const t = setTimeout(() => {
-      setGlitching(true);
-      setTimeout(() => { setPhase(p => (p+1) % LOGO_PHASES.length); setGlitching(false); }, 120);
-    }, LOGO_PHASES[phase].dur);
-    return () => clearTimeout(t);
-  }, [phase]);
-  const grid = LOGO_PHASES[phase].grid;
-  return (
-    <svg width={size} height={size} viewBox="0 0 17 16" style={{imageRendering:"pixelated",filter:glitching?`drop-shadow(0 0 6px ${ACCENT}) drop-shadow(3px 0 0 rgba(255,0,100,0.8)) drop-shadow(-3px 0 0 rgba(0,255,200,0.8))`:`drop-shadow(0 0 10px ${ACCENT}88)`,transform:glitching?"translateX(3px)":"translateX(0)",transition:"filter 0.05s,transform 0.05s"}}>
-      {grid.map((row,y) => row.map((cell,x) => { if(!cell) return null; return <rect key={`${x}-${y}`} x={x} y={y} width={1} height={1} fill={cell===2?"#0a1628":ACCENT}/>; }))}
-    </svg>
-  );
-}
-
-function PixelIcon({ grid, size=20 }) {
-  return (
-    <svg width={size} height={size} viewBox={`0 0 ${grid[0].length} ${grid.length}`} style={{imageRendering:"pixelated",display:"block"}}>
-      {grid.map((row,y) => row.map((cell,x) => cell ? <rect key={`${x}-${y}`} x={x} y={y} width={1} height={1} fill="currentColor"/> : null))}
-    </svg>
-  );
-}
-
-function HudBox({ label, children, style={}, accent=ACCENT }) {
-  return (
-    <div style={{position:"relative",background:PANEL,border:`0.5px solid ${accent}22`,borderRadius:2,...style}}>
-      {label && <div style={{position:"absolute",top:-9,left:10,background:PANEL,padding:"0 6px",fontSize:9,color:accent,fontFamily:"'Courier New',monospace",letterSpacing:"0.12em",fontWeight:700}}>{label}</div>}
-      {children}
-    </div>
-  );
-}
-
 async function fetchInfo(title) {
   try {
-    const res = await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:300,messages:[{role:"user",content:`Movie/TV show: "${title}". Reply ONLY raw JSON no markdown: {"year":"YYYY","genre":"Genre1, Genre2, Genre3 in Spanish (comma separated, max 3)","director":"name","plot":"3-4 sentences in Spanish"}`}]})});
-    const d = await res.json();
-    const m = (d.content?.[0]?.text||"").match(/\{[\s\S]*\}/);
-    return m ? JSON.parse(m[0]) : null;
+    const r = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${TMDB_KEY}&query=${encodeURIComponent(title)}&language=es-ES`);
+    const d = await r.json();
+    const result = d.results?.[0];
+    if (!result) return null;
+    const poster = result.poster_path ? `https://image.tmdb.org/t/p/w500${result.poster_path}` : null;
+    const year = (result.release_date || result.first_air_date || "").slice(0,4);
+    const plot = result.overview || "";
+    const genreIds = result.genre_ids || [];
+    const genreMap = {28:"Acción",12:"Aventura",16:"Animación",35:"Comedia",80:"Crimen",99:"Documental",18:"Drama",10751:"Familia",14:"Fantasía",36:"Histórica",27:"Terror",10402:"Música",9648:"Misterio",10749:"Romance",878:"Ciencia ficción",10770:"TV Movie",53:"Thriller",10752:"Bélica",37:"Western",10759:"Acción",10762:"Kids",10763:"Noticias",10764:"Reality",10765:"Sci-Fi",10766:"Soap",10767:"Talk",10768:"War"};
+    const genre = genreIds.slice(0,3).map(id=>genreMap[id]).filter(Boolean).join(", ");
+    return { poster, year, plot, genre };
   } catch { return null; }
 }
 
@@ -121,8 +85,43 @@ function shareWhatsApp(items, category) {
   window.open(`https://wa.me/?text=${encodeURIComponent(`🎬 *MM Menuda Movie*\nMi colección de ${category} (${list.length} títulos):\n\n${lines}\n\n_MM Menuda Movie_`)}`, "_blank");
 }
 
+function LogoBase({ size }) {
+  const [phase, setPhase] = useState(0);
+  const [glitching, setGlitching] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setGlitching(true);
+      setTimeout(() => { setPhase(p => (p+1) % LOGO_PHASES.length); setGlitching(false); }, 120);
+    }, LOGO_PHASES[phase].dur);
+    return () => clearTimeout(t);
+  }, [phase]);
+  const grid = LOGO_PHASES[phase].grid;
+  return (
+    <svg width={size} height={size} viewBox="0 0 17 16" style={{imageRendering:"pixelated",filter:glitching?`drop-shadow(0 0 6px ${ACCENT}) drop-shadow(3px 0 0 rgba(255,0,100,0.8)) drop-shadow(-3px 0 0 rgba(0,255,200,0.8))`:`drop-shadow(0 0 10px ${ACCENT}88)`,transform:glitching?"translateX(3px)":"translateX(0)",transition:"filter 0.05s,transform 0.05s"}}>
+      {grid.map((row,y) => row.map((cell,x) => { if(!cell) return null; return React.createElement('rect',{key:`${x}-${y}`,x,y,width:1,height:1,fill:cell===2?"#0a1628":ACCENT}); }))}
+    </svg>
+  );
+}
+
+function PixelIcon({ grid, size=20 }) {
+  return React.createElement('svg',{width:size,height:size,viewBox:`0 0 ${grid[0].length} ${grid.length}`,style:{imageRendering:"pixelated",display:"block"}},
+    grid.map((row,y) => row.map((cell,x) => cell ? React.createElement('rect',{key:`${x}-${y}`,x,y,width:1,height:1,fill:"currentColor"}) : null))
+  );
+}
+
+function HudBox({ label, children, style={}, accent=ACCENT }) {
+  return (
+    <div style={{position:"relative",background:PANEL,border:`0.5px solid ${accent}22`,borderRadius:2,...style}}>
+      {label && <div style={{position:"absolute",top:-9,left:10,background:PANEL,padding:"0 6px",fontSize:9,color:accent,fontFamily:"'Courier New',monospace",letterSpacing:"0.12em",fontWeight:700}}>{label}</div>}
+      {children}
+    </div>
+  );
+}
+
 function StarRating({ value, onChange }) {
-  return <div style={{display:"flex",gap:6}}>{[1,2,3,4,5].map(s=><span key={s} onClick={()=>onChange(s)} style={{fontSize:20,color:s<=value?ACCENT:SURFACE3,cursor:"pointer",textShadow:s<=value?`0 0 8px ${ACCENT}`:""}}>{ s<=value?"◆":"◇"}</span>)}</div>;
+  return React.createElement('div',{style:{display:"flex",gap:6}},
+    [1,2,3,4,5].map(s => React.createElement('span',{key:s,onClick:()=>onChange(s),style:{fontSize:20,color:s<=value?ACCENT:SURFACE3,cursor:"pointer",textShadow:s<=value?`0 0 8px ${ACCENT}`:""}}, s<=value?"◆":"◇"))
+  );
 }
 
 function GlitchEffect({ onDone }) {
@@ -131,8 +130,7 @@ function GlitchEffect({ onDone }) {
   useEffect(()=>{let i=0;const iv=setInterval(()=>{i++;setFrame(i);if(i>=18){clearInterval(iv);onDone();}},28);return()=>clearInterval(iv);},[]);
   return (
     <div style={{position:"fixed",inset:0,zIndex:500,pointerEvents:"none",overflow:"hidden"}}>
-      {slicesRef.current.map((s,i)=>frame>s.delay?<div key={i} style={{position:"absolute",left:0,right:0,top:`${s.y}%`,height:`${s.h}px`,transform:`translateX(${s.shift*(frame%2===0?1:-0.7)}px)`,background:s.color?`rgba(${frame%3===0?"0,212,255":"0,102,255"},0.2)`:`rgba(0,0,0,${0.4+Math.random()*0.3})`,mixBlendMode:s.color?"screen":"darken"}}/>:null)}
-      <div style={{position:"absolute",inset:0,backgroundImage:"repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,212,255,0.04) 2px,rgba(0,212,255,0.04) 4px)"}}/>
+      {slicesRef.current.map((s,i)=>frame>s.delay?<div key={i} style={{position:"absolute",left:0,right:0,top:`${s.y}%`,height:`${s.h}px`,transform:`translateX(${s.shift*(frame%2===0?1:-0.7)}px)`,background:s.color?`rgba(${frame%3===0?"0,212,255":"0,102,255"},0.2)`:`rgba(0,0,0,0.5)`,mixBlendMode:s.color?"screen":"darken"}}/>:null)}
     </div>
   );
 }
@@ -141,11 +139,13 @@ function ItemCard({ item, onClick, idx }) {
   const genres = item.genre ? item.genre.split(/[,\/]/).map(g=>g.trim()).filter(Boolean).slice(0,2) : [];
   const sc = STATUS_COLOR[item.status]||STATUS_COLOR["Pendiente"];
   return (
-    <div onClick={onClick} className="card-item" style={{animationDelay:`${idx*0.06}s`,cursor:"pointer",aspectRatio:"2/3",overflow:"hidden",position:"relative",background:`linear-gradient(160deg,${PANEL},${SURFACE2})`,outline:`1px solid rgba(0,212,255,0.12)`}}>
-      <div style={{position:"absolute",inset:0,backgroundImage:`linear-gradient(${BORDER} 1px,transparent 1px),linear-gradient(90deg,${BORDER} 1px,transparent 1px)`,backgroundSize:"14px 14px",opacity:0.4}}/>
-      <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
-        <span style={{fontSize:24,opacity:0.12,color:ACCENT,fontFamily:"monospace"}}>{CAT_ICONS[item.category]}</span>
-      </div>
+    <div onClick={onClick} style={{animationDelay:`${idx*0.06}s`,cursor:"pointer",aspectRatio:"2/3",overflow:"hidden",position:"relative",background:`linear-gradient(160deg,${PANEL},${SURFACE2})`,outline:`1px solid rgba(0,212,255,0.12)`}}>
+      {item.poster
+        ? <img src={item.poster} alt={item.title} style={{width:"100%",height:"100%",objectFit:"cover",display:"block"}}/>
+        : <div style={{position:"absolute",inset:0,backgroundImage:`linear-gradient(${BORDER} 1px,transparent 1px),linear-gradient(90deg,${BORDER} 1px,transparent 1px)`,backgroundSize:"14px 14px",display:"flex",alignItems:"center",justifyContent:"center"}}>
+            <span style={{fontSize:24,opacity:0.12,color:ACCENT,fontFamily:"monospace"}}>{CAT_ICONS[item.category]}</span>
+          </div>
+      }
       <div style={{position:"absolute",bottom:0,left:0,right:0,background:`linear-gradient(transparent,rgba(3,6,15,0.98))`,padding:"20px 7px 7px"}}>
         {genres.length>0&&<div style={{display:"flex",gap:3,marginBottom:3}}>{genres.map(g=><span key={g} style={{padding:"1px 4px",fontSize:7,color:ACCENT,border:`0.5px solid ${ACCENT}44`,fontFamily:"monospace"}}>{g.toUpperCase()}</span>)}</div>}
         <div style={{color:TEXT,fontSize:10,fontWeight:600,lineHeight:1.3,fontFamily:"'Courier New',monospace"}}>{item.title}</div>
@@ -176,13 +176,15 @@ function DetailPanel({ item, onClose, onDelete, onUpdate }) {
       <div onClick={close} style={{position:"fixed",inset:0,zIndex:200,background:"rgba(0,0,0,0.88)",opacity:vis?1:0,transition:"opacity 0.4s ease"}}/>
       <div style={{position:"fixed",left:0,right:0,bottom:0,zIndex:201,height:"92vh",background:PANEL,borderRadius:"12px 12px 0 0",border:`1px solid ${BORDER2}`,borderBottom:"none",transform:vis?"translateY(0)":"translateY(100%)",transition:"transform 1.004s cubic-bezier(0.16,1,0.3,1)",display:"flex",flexDirection:"column",overflow:"hidden"}}>
         <div style={{position:"absolute",top:0,left:"20%",right:"20%",height:"1px",background:`linear-gradient(90deg,transparent,${ACCENT},transparent)`,filter:"blur(1px)"}}/>
-        <div style={{height:"38%",flexShrink:0,position:"relative",background:`linear-gradient(160deg,#030d1f,#050a20)`,display:"flex",alignItems:"center",justifyContent:"center",overflow:"hidden"}}>
-          <div style={{position:"absolute",inset:0,backgroundImage:`linear-gradient(${BORDER} 1px,transparent 1px),linear-gradient(90deg,${BORDER} 1px,transparent 1px)`,backgroundSize:"24px 24px"}}/>
-          <span style={{fontSize:130,opacity:0.06,color:ACCENT,userSelect:"none",fontFamily:"monospace"}}>{CAT_ICONS[item.category]}</span>
+        <div style={{height:"38%",flexShrink:0,position:"relative",overflow:"hidden",display:"flex",alignItems:"center",justifyContent:"center",background:`linear-gradient(160deg,#030d1f,#050a20)`}}>
+          {item.poster
+            ? <img src={item.poster} alt={item.title} style={{width:"100%",height:"100%",objectFit:"cover",position:"absolute",inset:0,opacity:0.6}}/>
+            : <span style={{fontSize:130,opacity:0.06,color:ACCENT,userSelect:"none",fontFamily:"monospace"}}>{CAT_ICONS[item.category]}</span>
+          }
           <div style={{position:"absolute",bottom:0,left:0,right:0,height:"65%",background:`linear-gradient(transparent,${PANEL})`}}/>
-          <button onClick={close} style={{position:"absolute",top:12,left:12,width:28,height:28,border:`1px solid ${BORDER2}`,background:"rgba(3,6,15,0.8)",color:ACCENT,cursor:"pointer",fontSize:12,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"monospace"}}>✕</button>
-          {item.year&&<div style={{position:"absolute",top:12,right:12,border:`1px solid ${BORDER2}`,background:"rgba(0,212,255,0.08)",color:ACCENT,fontSize:9,padding:"3px 8px",fontFamily:"monospace",letterSpacing:"0.1em"}}>{item.year}</div>}
-          <div style={{position:"absolute",bottom:14,left:16,right:16}}>
+          <button onClick={close} style={{position:"absolute",top:12,left:12,width:28,height:28,border:`1px solid ${BORDER2}`,background:"rgba(3,6,15,0.8)",color:ACCENT,cursor:"pointer",fontSize:12,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"monospace",zIndex:2}}>✕</button>
+          {item.year&&<div style={{position:"absolute",top:12,right:12,border:`1px solid ${BORDER2}`,background:"rgba(0,212,255,0.08)",color:ACCENT,fontSize:9,padding:"3px 8px",fontFamily:"monospace",letterSpacing:"0.1em",zIndex:2}}>{item.year}</div>}
+          <div style={{position:"absolute",bottom:14,left:16,right:16,zIndex:2}}>
             <h2 style={{fontSize:20,fontWeight:800,color:TEXT,margin:"0 0 4px",letterSpacing:"0.08em",fontFamily:"'Courier New',monospace",textShadow:`0 0 16px rgba(0,212,255,0.4)`}}>{item.title.toUpperCase()}</h2>
             {item.director&&<div style={{fontSize:10,color:TEXT2,fontFamily:"monospace"}}>DIR // {item.director}</div>}
           </div>
@@ -190,8 +192,8 @@ function DetailPanel({ item, onClose, onDelete, onUpdate }) {
         <div style={{flex:1,overflowY:"auto",padding:"20px 16px 0"}}>
           <HudBox label="GÉNERO" style={{padding:"12px",marginBottom:14}}>
             <div style={{display:"flex",gap:6,flexWrap:"wrap",alignItems:"center",paddingTop:4}}>
-              {genres.length>0?genres.map(g=><span key={g} style={{padding:"3px 10px",border:`1px solid ${ACCENT}44`,background:`rgba(0,212,255,0.08)`,color:ACCENT,fontSize:10,fontFamily:"monospace",letterSpacing:"0.06em"}}>{g.toUpperCase()}</span>):<span style={{fontSize:10,color:TEXT3,fontFamily:"monospace"}}>N/A</span>}
-              <button onClick={()=>setEditingGenre(v=>!v)} style={{width:22,height:22,border:`0.5px solid ${BORDER2}`,background:"transparent",color:TEXT3,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:10}}>✏️</button>
+              {genres.length>0?genres.map(g=><span key={g} style={{padding:"3px 10px",border:`1px solid ${ACCENT}44`,background:`rgba(0,212,255,0.08)`,color:ACCENT,fontSize:10,fontFamily:"monospace"}}>{g.toUpperCase()}</span>):<span style={{fontSize:10,color:TEXT3,fontFamily:"monospace"}}>N/A</span>}
+              <button onClick={()=>setEditingGenre(v=>!v)} style={{width:22,height:22,border:`0.5px solid ${BORDER2}`,background:"transparent",color:TEXT3,cursor:"pointer",fontSize:10}}>✏️</button>
             </div>
             {editingGenre&&<div style={{display:"flex",gap:8,marginTop:10}}><input ref={genreRef} value={genre} onChange={e=>setGenre(e.target.value)} onKeyDown={e=>e.key==="Enter"&&setEditingGenre(false)} style={{flex:1,padding:"6px 10px",border:`1px solid ${ACCENT}`,background:SURFACE2,color:TEXT,fontSize:12,outline:"none",fontFamily:"monospace"}}/><button onClick={()=>setEditingGenre(false)} style={{padding:"6px 12px",border:"none",background:ACCENT,color:BG,fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"monospace"}}>OK</button></div>}
           </HudBox>
@@ -199,9 +201,8 @@ function DetailPanel({ item, onClose, onDelete, onUpdate }) {
           <HudBox label="ESTADO" style={{padding:"12px",marginBottom:14}}>
             <div style={{display:"flex",gap:8,paddingTop:6}}>
               {["Pendiente","Viendo","Visto"].map(s=>(
-                <button key={s} onClick={()=>setStatus(s)} style={{flex:1,padding:"8px 0",border:status===s?`1px solid ${STATUS_COLOR[s]}`:`0.5px solid ${BORDER}`,background:status===s?`${STATUS_COLOR[s]}12`:"transparent",color:status===s?STATUS_COLOR[s]:TEXT3,fontSize:10,cursor:"pointer",fontFamily:"monospace",letterSpacing:"0.04em",display:"flex",alignItems:"center",justifyContent:"center",gap:4}}>
-                  <span style={{width:5,height:5,background:STATUS_COLOR[s],boxShadow:status===s?`0 0 5px ${STATUS_COLOR[s]}`:""}}/>
-                  {s.toUpperCase()}
+                <button key={s} onClick={()=>setStatus(s)} style={{flex:1,padding:"8px 0",border:status===s?`1px solid ${STATUS_COLOR[s]}`:`0.5px solid ${BORDER}`,background:status===s?`${STATUS_COLOR[s]}12`:"transparent",color:status===s?STATUS_COLOR[s]:TEXT3,fontSize:10,cursor:"pointer",fontFamily:"monospace",display:"flex",alignItems:"center",justifyContent:"center",gap:4}}>
+                  <span style={{width:5,height:5,background:STATUS_COLOR[s]}}/>{s.toUpperCase()}
                 </button>
               ))}
             </div>
@@ -211,8 +212,8 @@ function DetailPanel({ item, onClose, onDelete, onUpdate }) {
           </HudBox>
         </div>
         <div style={{padding:"10px 16px 32px",display:"flex",gap:10,flexShrink:0,borderTop:`1px solid ${BORDER}`}}>
-          <button onClick={()=>{onDelete(item.id);close();}} style={{width:44,height:44,border:`1px solid rgba(255,51,102,0.4)`,background:"rgba(255,51,102,0.08)",color:"#ff3366",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>🗑</button>
-          <button onClick={save} style={{flex:1,padding:12,border:`1px solid ${ACCENT}`,background:`rgba(0,212,255,0.1)`,color:ACCENT,fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"monospace",letterSpacing:"0.12em",textShadow:`0 0 8px ${ACCENT}`}}>[ GUARDAR ]</button>
+          <button onClick={()=>{onDelete(item.id);close();}} style={{width:44,height:44,border:`1px solid rgba(255,51,102,0.4)`,background:"rgba(255,51,102,0.08)",color:"#ff3366",cursor:"pointer",fontSize:18}}>🗑</button>
+          <button onClick={save} style={{flex:1,padding:12,border:`1px solid ${ACCENT}`,background:`rgba(0,212,255,0.1)`,color:ACCENT,fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"monospace",letterSpacing:"0.12em"}}>[ GUARDAR ]</button>
         </div>
       </div>
     </>
@@ -227,11 +228,11 @@ function AddSheet({ tab, setTab, onAdd, loading, onClose }) {
   const inputRef = useRef(null);
   useEffect(()=>{if(mode==="manual")setTimeout(()=>inputRef.current&&inputRef.current.focus(),100);},[mode]);
   function parseVoice(text){const t=text.toLowerCase();let cat=tab,tp=text;const map={"película":"Películas","pelicula":"Películas","serie":"Series","documental":"Documentales","charla":"Charlas"};for(const[k,v]of Object.entries(map)){if(t.startsWith(k+" ")){cat=v;tp=text.slice(k.length+1).trim();break;}}return{cat,title:tp};}
-  function startVoice(){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){setVoiceStatus("// VOZ NO DISPONIBLE");return;}const rec=new SR();rec.lang="es-ES";rec.onstart=()=>{setListening(true);setVoiceStatus("// ESCUCHANDO...");};rec.onresult=async(e)=>{const spoken=e.results[0][0].transcript;setListening(false);setVoiceStatus(`// INPUT: "${spoken}"`);const{cat,title:t}=parseVoice(spoken);setTab(cat);await onAdd(t,cat);};rec.onerror=()=>{setListening(false);setVoiceStatus("// ERROR");};rec.onend=()=>setListening(false);rec.start();}
+  function startVoice(){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){setVoiceStatus("// VOZ NO DISPONIBLE EN ESTE NAVEGADOR");return;}const rec=new SR();rec.lang="es-ES";rec.onstart=()=>{setListening(true);setVoiceStatus("// ESCUCHANDO...");};rec.onresult=async(e)=>{const spoken=e.results[0][0].transcript;setListening(false);setVoiceStatus(`// "${spoken}"`);const{cat,title:t}=parseVoice(spoken);setTab(cat);await onAdd(t,cat);};rec.onerror=()=>{setListening(false);setVoiceStatus("// ERROR — INTENTA DE NUEVO");};rec.onend=()=>setListening(false);rec.start();}
   return (
     <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.9)",zIndex:100,display:"flex",alignItems:"flex-end"}}>
       <div onClick={e=>e.stopPropagation()} style={{width:"100%",background:PANEL,borderRadius:"12px 12px 0 0",border:`1px solid ${BORDER2}`,borderBottom:"none",padding:"16px 20px 44px",boxSizing:"border-box",position:"relative"}}>
-        <div style={{position:"absolute",top:0,left:"20%",right:"20%",height:"1px",background:`linear-gradient(90deg,transparent,${ACCENT},transparent)`,filter:"blur(1px)"}}/>
+        <div style={{position:"absolute",top:0,left:"20%",right:"20%",height:"1px",background:`linear-gradient(90deg,transparent,${ACCENT},transparent)`}}/>
         <div style={{width:36,height:2,background:SURFACE3,margin:"0 auto 20px"}}/>
         {!mode?(
           <>
@@ -242,7 +243,7 @@ function AddSheet({ tab, setTab, onAdd, loading, onClose }) {
                 <HudBox key={lbl} style={{flex:1,padding:"18px 10px",cursor:"pointer"}} accent={ACCENT}>
                   <button onClick={fn} style={{background:"transparent",border:"none",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:8,width:"100%"}}>
                     <span style={{fontSize:26}}>{ico}</span>
-                    <span style={{fontSize:12,fontWeight:700,fontFamily:"monospace",color:ACCENT,letterSpacing:"0.08em"}}>{lbl}</span>
+                    <span style={{fontSize:12,fontWeight:700,fontFamily:"monospace",color:ACCENT}}>{lbl}</span>
                     <span style={{fontSize:10,color:TEXT2,fontFamily:"monospace"}}>{sub}</span>
                   </button>
                 </HudBox>
@@ -257,15 +258,15 @@ function AddSheet({ tab, setTab, onAdd, loading, onClose }) {
             </div>
             <input ref={inputRef} value={title} onChange={e=>setTitle(e.target.value)} onKeyDown={e=>e.key==="Enter"&&onAdd(title,tab)} placeholder="// NOMBRE DEL TÍTULO..." style={{width:"100%",padding:"12px 14px",border:`1px solid ${BORDER2}`,background:SURFACE2,color:TEXT,fontSize:13,boxSizing:"border-box",marginBottom:10,outline:"none",fontFamily:"monospace"}}/>
             <button onClick={()=>onAdd(title,tab)} disabled={loading||!title.trim()} style={{width:"100%",padding:12,border:`1px solid ${title.trim()?ACCENT:BORDER}`,background:title.trim()?`rgba(0,212,255,0.1)`:"transparent",color:title.trim()?ACCENT:TEXT3,fontSize:12,fontWeight:700,cursor:title.trim()?"pointer":"default",fontFamily:"monospace",letterSpacing:"0.1em"}}>
-              {loading?"// PROCESANDO...":"[ AÑADIR ]"}
+              {loading?"// BUSCANDO PORTADA...":"[ AÑADIR ]"}
             </button>
           </>
         ):(
           <>
             <button onClick={()=>{setMode(null);setVoiceStatus("");}} style={{background:"transparent",border:"none",color:TEXT2,cursor:"pointer",fontSize:11,marginBottom:20,padding:0,fontFamily:"monospace"}}>← VOLVER</button>
             <div style={{display:"flex",flexDirection:"column",alignItems:"center",padding:"12px 0"}}>
-              <HudBox style={{width:72,height:72,display:"flex",alignItems:"center",justifyContent:"center",marginBottom:16}} accent={listening?ACCENT:BORDER}>
-                <span style={{fontSize:32}}>{listening?"🎙️":"🎤"}</span>
+              <HudBox style={{width:72,height:72,display:"flex",alignItems:"center",justifyContent:"center",marginBottom:16,boxShadow:listening?`0 0 20px rgba(0,212,255,0.3)`:"none"}} accent={listening?ACCENT:BORDER}>
+                <svg width="28" height="28" viewBox="0 0 24 24" fill={listening?ACCENT:TEXT3}><path d="M12 1a4 4 0 0 1 4 4v6a4 4 0 0 1-8 0V5a4 4 0 0 1 4-4zm0 2a2 2 0 0 0-2 2v6a2 2 0 0 0 4 0V5a2 2 0 0 0-2-2zm-1 15.93A8 8 0 0 1 4.07 13H6.1a6 6 0 0 0 11.8 0h2.03A8 8 0 0 1 13 18.93V21h2v2H9v-2h2v-2.07z"/></svg>
               </HudBox>
               <div style={{fontSize:12,fontWeight:600,marginBottom:6,color:listening?ACCENT:TEXT,fontFamily:"monospace"}}>{listening?"// ESCUCHANDO...":"// EN ESPERA"}</div>
               <div style={{fontSize:10,color:TEXT2,textAlign:"center",marginBottom:20,fontFamily:"monospace"}}>{voiceStatus||'// DI "PELÍCULA MATRIX"'}</div>
@@ -289,15 +290,15 @@ function App() {
   const [activeGenre, setActiveGenre] = useState("Todas");
   const [selected, setSelected] = useState(null);
 
-  useEffect(()=>{try{const r=storage.get("media-items");if(r)setItems(JSON.parse(r.value));}catch{}},[]);
-  function save(list){setItems(list);try{storage.set("media-items",JSON.stringify(list));}catch{}}
+  useEffect(()=>{try{const v=localStorage.getItem("media-items");if(v)setItems(JSON.parse(v));}catch{}},[]);
+  function save(list){setItems(list);try{localStorage.setItem("media-items",JSON.stringify(list));}catch{}}
   async function addItem(rawTitle,cat){
     if(!rawTitle.trim())return;
-    setLoading(true);setToast("// PROCESANDO...");
+    setLoading(true);setToast("// BUSCANDO PORTADA...");
     const info=await fetchInfo(rawTitle.trim());
-    save([{id:Date.now(),title:rawTitle.trim(),category:cat,year:info?.year||null,plot:info?.plot||null,genre:info?.genre||null,director:info?.director||null,rating:0,status:"Pendiente",addedAt:Date.now()},...items]);
+    save([{id:Date.now(),title:rawTitle.trim(),category:cat,year:info?.year||null,plot:info?.plot||null,genre:info?.genre||null,director:info?.director||null,poster:info?.poster||null,rating:0,status:"Pendiente",addedAt:Date.now()},...items]);
     setShowAdd(false);setLoading(false);
-    setToast(info?.year?`// REGISTRADO · ${info.year}`:"// REGISTRADO");
+    setToast(info?.poster?"// PORTADA ENCONTRADA ✓":info?.year?`// REGISTRADO · ${info.year}`:"// REGISTRADO");
     setTimeout(()=>setToast(""),2500);
   }
   const matchesGenre=(ig,f)=>{if(f==="Todas")return true;if(!ig)return false;const n=s=>s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[-\s]/g,"");const ff=n(f);return ig.split(/[,\/]/).map(g=>n(g.trim())).some(g=>g.includes(ff)||ff.includes(g));};
@@ -309,10 +310,7 @@ function App() {
       <style>{`
         @keyframes vhs-flicker{0%,100%{opacity:.025}50%{opacity:.04}}
         @keyframes scanH{0%{transform:translateY(-100%)}100%{transform:translateY(100vh)}}
-        @keyframes cardPop{from{opacity:0;transform:scale(0.93)}to{opacity:1;transform:scale(1)}}
         @keyframes fabGlow{0%,100%{box-shadow:0 0 0 3px rgba(0,212,255,0.1),0 0 14px rgba(0,212,255,0.2)}50%{box-shadow:0 0 0 5px rgba(0,212,255,0.06),0 0 22px rgba(0,212,255,0.3)}}
-        .card-item{animation:cardPop 0.35s cubic-bezier(0.16,1,0.3,1) both}
-        .card-item:active{transform:scale(0.94)!important;transition:transform 0.1s}
         .fab-btn{animation:fabGlow 3s ease-in-out infinite}
         .nav-btn:active{transform:scale(0.84);transition:transform 0.1s}
         .dot-bg{position:fixed;inset:0;pointer-events:none;z-index:0;background-color:#03060f;background-image:linear-gradient(rgba(0,212,255,0.06) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,0.06) 1px,transparent 1px);background-size:32px 32px}
@@ -324,18 +322,16 @@ function App() {
       `}</style>
       <div className="dot-bg"/>
       <div className="vhs-noise"/>
-      {toast&&<div style={{position:"fixed",top:16,left:"50%",transform:"translateX(-50%)",background:`rgba(0,212,255,0.1)`,border:`1px solid ${ACCENT}`,color:ACCENT,padding:"8px 16px",fontSize:11,fontWeight:600,zIndex:400,whiteSpace:"nowrap",fontFamily:"monospace",letterSpacing:"0.06em"}}>{toast}</div>}
+      {toast&&<div style={{position:"fixed",top:16,left:"50%",transform:"translateX(-50%)",background:`rgba(0,212,255,0.1)`,border:`1px solid ${ACCENT}`,color:ACCENT,padding:"8px 16px",fontSize:11,fontWeight:600,zIndex:400,whiteSpace:"nowrap",fontFamily:"monospace"}}>{toast}</div>}
 
       <div style={{padding:"10px 12px",zIndex:10,position:"relative"}}>
         <HudBox style={{padding:"12px 14px"}} accent={ACCENT}>
-          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-            <div style={{display:"flex",alignItems:"center",gap:10}}>
-              <LogoBase size={24}/>
-              <h1 style={{fontSize:13,fontWeight:800,margin:0,fontFamily:"'Courier New',monospace",letterSpacing:"0.18em"}}>
-                <span style={{color:TEXT}}>MENUDA</span>
-                <span style={{color:ACCENT,textShadow:`0 0 14px ${ACCENT}`,marginLeft:3}}>MOVIE</span>
-              </h1>
-            </div>
+          <div style={{display:"flex",alignItems:"center",gap:10}}>
+            <LogoBase size={24}/>
+            <h1 style={{fontSize:13,fontWeight:800,margin:0,fontFamily:"'Courier New',monospace",letterSpacing:"0.18em"}}>
+              <span style={{color:TEXT}}>MENUDA</span>
+              <span style={{color:ACCENT,textShadow:`0 0 14px ${ACCENT}`,marginLeft:3}}>MOVIE</span>
+            </h1>
           </div>
         </HudBox>
       </div>
@@ -352,8 +348,8 @@ function App() {
               ))}
             </div>
             <div style={{display:"flex",gap:6}}>
-              <button onClick={()=>setShowGenre(true)} style={{width:26,height:26,border:`1px solid ${activeGenre!=="Todas"?ACCENT:BORDER}`,background:activeGenre!=="Todas"?`rgba(0,212,255,0.1)`:"transparent",color:activeGenre!=="Todas"?ACCENT:TEXT2,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>⚡</button>
-              <button onClick={()=>setShowShare(true)} style={{width:26,height:26,border:`1px solid ${BORDER}`,background:"transparent",color:TEXT2,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>↗</button>
+              <button onClick={()=>setShowGenre(true)} style={{width:26,height:26,border:`1px solid ${activeGenre!=="Todas"?ACCENT:BORDER}`,background:activeGenre!=="Todas"?`rgba(0,212,255,0.1)`:"transparent",color:activeGenre!=="Todas"?ACCENT:TEXT2,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14}}>⚡</button>
+              <button onClick={()=>setShowShare(true)} style={{width:26,height:26,border:`1px solid ${BORDER}`,background:"transparent",color:TEXT2,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14}}>↗</button>
             </div>
           </div>
         </HudBox>
@@ -413,7 +409,7 @@ function App() {
   );
 }
 
-ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(App));
   </script>
 </body>
 </html>
