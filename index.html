@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="MenudaMovie"/>
+  <meta name="theme-color" content="#03060f"/>
+  <title>MM Menuda Movie</title>
+  <link rel="manifest" href="manifest.json"/>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #03060f; font-family: system-ui, sans-serif; }
+    #root { max-width: 390px; margin: 0 auto; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script type="text/babel" data-presets="react">
+
+// ── Storage (localStorage replacement) ──────────────────────────────────────
+const storage = {
+  get: (key) => { const v = localStorage.getItem(key); return v ? { value: v } : null; },
+  set: (key, value) => { localStorage.setItem(key, value); return true; },
+};
+window.storage = storage;
+
+// ── Constants ────────────────────────────────────────────────────────────────
+const ACCENT = "#00d4ff";
+const BG = "#03060f";
+const PANEL = "#0a0e18";
+const SURFACE2 = "#0d1425";
+const SURFACE3 = "#121b30";
+const BORDER = "rgba(0,212,255,0.12)";
+const BORDER2 = "rgba(0,212,255,0.3)";
+const TEXT = "#e8f4ff";
+const TEXT2 = "#6a8aaa";
+const TEXT3 = "#2a4060";
+const STATUS_COLOR = { "Visto": "#00ff88", "Viendo": "#00d4ff", "Pendiente": "#ff3366" };
+const CATEGORIES = ["Películas", "Series", "Documentales", "Charlas"];
+const CAT_ICONS = { "Películas": "◈", "Series": "⬡", "Documentales": "◎", "Charlas": "◇" };
+const GENRES = {
+  "Películas": ["Todas","Terror","Comedia","Acción","Drama","Thriller","Ciencia ficción","Animación","Romance","Aventura","Fantasía","Misterio","Crimen","Bélica","Western","Musical","Biográfica","Histórica","Superhéroes"],
+  "Series": ["Todas","Drama","Comedia","Terror","Thriller","Crimen","Ciencia ficción","Fantasía","Animación","Reality","Documental","Miniserie","Acción","Romance","Histórica","Superhéroes"],
+  "Documentales": ["Todas","Naturaleza","Historia","Crimen","Ciencia","Tecnología","Música","Deporte","Sociedad","Política","Arte","Gastronomía","Viajes","Biografía","Medioambiente"],
+  "Charlas": ["Todas","Tecnología","Ciencia","Negocios","Arte","Psicología","Política","Educación","Salud","Motivación","Filosofía","Economía","Medio ambiente","Creatividad"],
+};
+const PIXEL_GRIDS = {
+  "Películas":[[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,0,1,0,0,0,0,0,0,0,0,0,0,1,0,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],[1,0,0,1,0,0,0,0,0,0,0,0,1,0,0,1],[1,0,0,1,0,0,0,0,0,0,0,0,1,0,0,1],[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],[1,0,0,1,0,0,0,0,0,0,0,0,1,0,0,1],[1,0,0,1,0,0,0,0,0,0,0,0,1,0,0,1],[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]],
+  "Series":[[0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1],[1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1],[1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1],[1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1],[1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1],[1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[0,0,0,0,0,1,1,0,0,1,1,0,0,0,0,0],[0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0],[0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0]],
+  "Documentales":[[0,1,1,1,1,1,1,1,1,1,1,0,1,1,1,0],[0,1,0,0,0,0,0,0,0,0,1,0,1,0,1,0],[0,1,0,0,0,0,0,0,0,0,1,0,1,1,1,0],[0,1,0,0,1,0,0,0,0,0,1,0,0,0,0,0],[0,1,0,0,1,1,0,0,0,0,1,0,0,0,0,0],[0,1,0,0,1,1,1,0,0,0,1,0,0,0,0,0],[0,1,0,0,1,1,0,0,0,0,1,0,0,0,0,0],[0,1,0,0,1,0,0,0,0,0,1,0,0,0,0,0],[0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0],[0,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],
+  "Charlas":[[0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],[1,1,0,0,0,0,0,0,0,0,0,0,0,1,1,0],[1,1,0,1,0,1,0,1,0,1,0,1,0,1,1,0],[1,1,0,0,0,0,0,0,0,0,0,0,0,1,1,0],[1,1,0,1,0,1,0,1,0,1,0,0,0,1,1,0],[1,1,0,0,0,0,0,0,0,0,0,0,0,1,1,0],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],[0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0],[0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],
+};
+const SMILE_HAPPY = [[0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0],[0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0],[0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],[1,1,1,1,2,2,1,1,1,1,1,2,2,1,1,1,1],[1,1,1,1,2,2,1,1,1,1,1,2,2,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,2,1,1,1,1,1,1,1,1,1,2,1,1,1],[1,1,1,1,2,1,1,1,1,1,1,1,2,1,1,1,1],[1,1,1,1,1,2,2,2,2,2,2,2,1,1,1,1,1],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],[0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0],[0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0],[0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0]];
+const SMILE_FLAT = [[0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0],[0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0],[0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],[1,1,1,1,2,2,1,1,1,1,1,2,2,1,1,1,1],[1,1,1,1,2,2,1,1,1,1,1,2,2,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,2,2,2,2,2,2,2,2,2,2,2,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],[0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0],[0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0],[0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0]];
+const VHS_TAPE = [[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],[1,0,2,2,2,2,2,2,2,2,2,2,2,2,2,0,1],[1,0,2,0,0,0,0,0,0,0,0,0,0,0,2,0,1],[1,0,2,0,0,0,0,0,0,0,0,0,0,0,2,0,1],[1,0,2,2,2,2,2,2,2,2,2,2,2,2,2,0,1],[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],[1,1,1,0,0,0,0,0,0,0,0,0,0,0,1,1,1],[1,1,1,0,3,3,3,0,0,0,3,3,3,0,1,1,1],[1,1,1,0,3,3,3,0,0,0,3,3,3,0,1,1,1],[1,1,1,0,0,0,0,0,0,0,0,0,0,0,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]];
+const LOGO_PHASES = [{grid:SMILE_HAPPY,dur:3000},{grid:SMILE_FLAT,dur:800},{grid:VHS_TAPE,dur:2500},{grid:SMILE_FLAT,dur:800}];
+
+const { useState, useEffect, useRef } = React;
+
+function LogoBase({ size }) {
+  const [phase, setPhase] = useState(0);
+  const [glitching, setGlitching] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setGlitching(true);
+      setTimeout(() => { setPhase(p => (p+1) % LOGO_PHASES.length); setGlitching(false); }, 120);
+    }, LOGO_PHASES[phase].dur);
+    return () => clearTimeout(t);
+  }, [phase]);
+  const grid = LOGO_PHASES[phase].grid;
+  return (
+    <svg width={size} height={size} viewBox="0 0 17 16" style={{imageRendering:"pixelated",filter:glitching?`drop-shadow(0 0 6px ${ACCENT}) drop-shadow(3px 0 0 rgba(255,0,100,0.8)) drop-shadow(-3px 0 0 rgba(0,255,200,0.8))`:`drop-shadow(0 0 10px ${ACCENT}88)`,transform:glitching?"translateX(3px)":"translateX(0)",transition:"filter 0.05s,transform 0.05s"}}>
+      {grid.map((row,y) => row.map((cell,x) => { if(!cell) return null; return <rect key={`${x}-${y}`} x={x} y={y} width={1} height={1} fill={cell===2?"#0a1628":ACCENT}/>; }))}
+    </svg>
+  );
+}
+
+function PixelIcon({ grid, size=20 }) {
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${grid[0].length} ${grid.length}`} style={{imageRendering:"pixelated",display:"block"}}>
+      {grid.map((row,y) => row.map((cell,x) => cell ? <rect key={`${x}-${y}`} x={x} y={y} width={1} height={1} fill="currentColor"/> : null))}
+    </svg>
+  );
+}
+
+function HudBox({ label, children, style={}, accent=ACCENT }) {
+  return (
+    <div style={{position:"relative",background:PANEL,border:`0.5px solid ${accent}22`,borderRadius:2,...style}}>
+      {label && <div style={{position:"absolute",top:-9,left:10,background:PANEL,padding:"0 6px",fontSize:9,color:accent,fontFamily:"'Courier New',monospace",letterSpacing:"0.12em",fontWeight:700}}>{label}</div>}
+      {children}
+    </div>
+  );
+}
+
+async function fetchInfo(title) {
+  try {
+    const res = await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:300,messages:[{role:"user",content:`Movie/TV show: "${title}". Reply ONLY raw JSON no markdown: {"year":"YYYY","genre":"Genre1, Genre2, Genre3 in Spanish (comma separated, max 3)","director":"name","plot":"3-4 sentences in Spanish"}`}]})});
+    const d = await res.json();
+    const m = (d.content?.[0]?.text||"").match(/\{[\s\S]*\}/);
+    return m ? JSON.parse(m[0]) : null;
+  } catch { return null; }
+}
+
+function exportToPDF(items, category) {
+  const list = items.filter(i=>i.category===category);
+  const se = {"Visto":"🟢","Viendo":"🔵","Pendiente":"🔴"};
+  const rows = list.map((item,idx)=>`<tr><td>${idx+1}</td><td><strong>${item.title}</strong></td><td>${item.year||"—"}</td><td>${item.genre||"—"}</td><td>${se[item.status]||"🔴"} ${item.status||"Pendiente"}</td><td>${item.rating?"★".repeat(item.rating):"—"}</td></tr>`).join("");
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{font-family:Arial;background:#03060f;color:#e8f4ff;padding:40px}h1{color:#00d4ff}table{width:100%;border-collapse:collapse}th{text-align:left;padding:10px 8px;color:#00d4ff;font-size:11px;text-transform:uppercase;border-bottom:1px solid rgba(0,212,255,0.2)}td{padding:10px 8px;border-bottom:1px solid rgba(0,212,255,0.08);font-size:13px}</style></head><body><h1>MM · Menuda Movie</h1><p style="color:#6a8aaa">${category} · ${list.length} títulos · ${new Date().toLocaleDateString("es")}</p><table><thead><tr><th>#</th><th>Título</th><th>Año</th><th>Género</th><th>Estado</th><th>Val.</th></tr></thead><tbody>${rows}</tbody></table></body></html>`;
+  const w = window.open("","_blank"); if(w){w.document.write(html);w.document.close();setTimeout(()=>w.print(),800);}
+}
+
+function shareWhatsApp(items, category) {
+  const list = items.filter(i=>i.category===category);
+  const si = {"Visto":"✅","Viendo":"⏳","Pendiente":"❌"};
+  const lines = list.map((item,i)=>`${i+1}. ${si[item.status]||"❌"} *${item.title}*${item.year?` (${item.year})`:""}${item.rating?" "+"⭐".repeat(item.rating):""}`).join("\n");
+  window.open(`https://wa.me/?text=${encodeURIComponent(`🎬 *MM Menuda Movie*\nMi colección de ${category} (${list.length} títulos):\n\n${lines}\n\n_MM Menuda Movie_`)}`, "_blank");
+}
+
+function StarRating({ value, onChange }) {
+  return <div style={{display:"flex",gap:6}}>{[1,2,3,4,5].map(s=><span key={s} onClick={()=>onChange(s)} style={{fontSize:20,color:s<=value?ACCENT:SURFACE3,cursor:"pointer",textShadow:s<=value?`0 0 8px ${ACCENT}`:""}}>{ s<=value?"◆":"◇"}</span>)}</div>;
+}
+
+function GlitchEffect({ onDone }) {
+  const [frame, setFrame] = useState(0);
+  const slicesRef = useRef(Array.from({length:14},()=>({h:Math.random()*16+3,y:Math.random()*100,shift:(Math.random()-0.5)*50,color:Math.random()>0.6,delay:Math.floor(Math.random()*8)})));
+  useEffect(()=>{let i=0;const iv=setInterval(()=>{i++;setFrame(i);if(i>=18){clearInterval(iv);onDone();}},28);return()=>clearInterval(iv);},[]);
+  return (
+    <div style={{position:"fixed",inset:0,zIndex:500,pointerEvents:"none",overflow:"hidden"}}>
+      {slicesRef.current.map((s,i)=>frame>s.delay?<div key={i} style={{position:"absolute",left:0,right:0,top:`${s.y}%`,height:`${s.h}px`,transform:`translateX(${s.shift*(frame%2===0?1:-0.7)}px)`,background:s.color?`rgba(${frame%3===0?"0,212,255":"0,102,255"},0.2)`:`rgba(0,0,0,${0.4+Math.random()*0.3})`,mixBlendMode:s.color?"screen":"darken"}}/>:null)}
+      <div style={{position:"absolute",inset:0,backgroundImage:"repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,212,255,0.04) 2px,rgba(0,212,255,0.04) 4px)"}}/>
+    </div>
+  );
+}
+
+function ItemCard({ item, onClick, idx }) {
+  const genres = item.genre ? item.genre.split(/[,\/]/).map(g=>g.trim()).filter(Boolean).slice(0,2) : [];
+  const sc = STATUS_COLOR[item.status]||STATUS_COLOR["Pendiente"];
+  return (
+    <div onClick={onClick} className="card-item" style={{animationDelay:`${idx*0.06}s`,cursor:"pointer",aspectRatio:"2/3",overflow:"hidden",position:"relative",background:`linear-gradient(160deg,${PANEL},${SURFACE2})`,outline:`1px solid rgba(0,212,255,0.12)`}}>
+      <div style={{position:"absolute",inset:0,backgroundImage:`linear-gradient(${BORDER} 1px,transparent 1px),linear-gradient(90deg,${BORDER} 1px,transparent 1px)`,backgroundSize:"14px 14px",opacity:0.4}}/>
+      <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
+        <span style={{fontSize:24,opacity:0.12,color:ACCENT,fontFamily:"monospace"}}>{CAT_ICONS[item.category]}</span>
+      </div>
+      <div style={{position:"absolute",bottom:0,left:0,right:0,background:`linear-gradient(transparent,rgba(3,6,15,0.98))`,padding:"20px 7px 7px"}}>
+        {genres.length>0&&<div style={{display:"flex",gap:3,marginBottom:3}}>{genres.map(g=><span key={g} style={{padding:"1px 4px",fontSize:7,color:ACCENT,border:`0.5px solid ${ACCENT}44`,fontFamily:"monospace"}}>{g.toUpperCase()}</span>)}</div>}
+        <div style={{color:TEXT,fontSize:10,fontWeight:600,lineHeight:1.3,fontFamily:"'Courier New',monospace"}}>{item.title}</div>
+        {item.year&&<div style={{color:TEXT3,fontSize:8,fontFamily:"monospace"}}>{item.year}</div>}
+      </div>
+      <div style={{position:"absolute",top:5,left:5,width:7,height:7,background:sc,boxShadow:`0 0 6px ${sc}`}}/>
+      {item.rating>0&&<div style={{position:"absolute",top:4,right:4,fontSize:8,color:ACCENT,fontFamily:"monospace",background:`rgba(0,212,255,0.1)`,border:`0.5px solid ${ACCENT}`,padding:"1px 4px"}}>{item.rating}◆</div>}
+    </div>
+  );
+}
+
+function DetailPanel({ item, onClose, onDelete, onUpdate }) {
+  const [vis, setVis] = useState(false);
+  const [glitch, setGlitch] = useState(true);
+  const [rating, setRating] = useState(item.rating||0);
+  const [status, setStatus] = useState(item.status||"Pendiente");
+  const [genre, setGenre] = useState(item.genre||"");
+  const [editingGenre, setEditingGenre] = useState(false);
+  const genreRef = useRef(null);
+  useEffect(()=>{if(editingGenre)setTimeout(()=>genreRef.current&&genreRef.current.focus(),50);},[editingGenre]);
+  useEffect(()=>{const t=setTimeout(()=>setVis(true),10);return()=>clearTimeout(t);},[]);
+  function close(){setVis(false);setTimeout(onClose,1004);}
+  function save(){onUpdate({...item,rating,status,genre});close();}
+  const genres = genre ? genre.split(/[,\/]/).map(g=>g.trim()).filter(Boolean) : [];
+  return (
+    <>
+      {glitch&&<GlitchEffect onDone={()=>setGlitch(false)}/>}
+      <div onClick={close} style={{position:"fixed",inset:0,zIndex:200,background:"rgba(0,0,0,0.88)",opacity:vis?1:0,transition:"opacity 0.4s ease"}}/>
+      <div style={{position:"fixed",left:0,right:0,bottom:0,zIndex:201,height:"92vh",background:PANEL,borderRadius:"12px 12px 0 0",border:`1px solid ${BORDER2}`,borderBottom:"none",transform:vis?"translateY(0)":"translateY(100%)",transition:"transform 1.004s cubic-bezier(0.16,1,0.3,1)",display:"flex",flexDirection:"column",overflow:"hidden"}}>
+        <div style={{position:"absolute",top:0,left:"20%",right:"20%",height:"1px",background:`linear-gradient(90deg,transparent,${ACCENT},transparent)`,filter:"blur(1px)"}}/>
+        <div style={{height:"38%",flexShrink:0,position:"relative",background:`linear-gradient(160deg,#030d1f,#050a20)`,display:"flex",alignItems:"center",justifyContent:"center",overflow:"hidden"}}>
+          <div style={{position:"absolute",inset:0,backgroundImage:`linear-gradient(${BORDER} 1px,transparent 1px),linear-gradient(90deg,${BORDER} 1px,transparent 1px)`,backgroundSize:"24px 24px"}}/>
+          <span style={{fontSize:130,opacity:0.06,color:ACCENT,userSelect:"none",fontFamily:"monospace"}}>{CAT_ICONS[item.category]}</span>
+          <div style={{position:"absolute",bottom:0,left:0,right:0,height:"65%",background:`linear-gradient(transparent,${PANEL})`}}/>
+          <button onClick={close} style={{position:"absolute",top:12,left:12,width:28,height:28,border:`1px solid ${BORDER2}`,background:"rgba(3,6,15,0.8)",color:ACCENT,cursor:"pointer",fontSize:12,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"monospace"}}>✕</button>
+          {item.year&&<div style={{position:"absolute",top:12,right:12,border:`1px solid ${BORDER2}`,background:"rgba(0,212,255,0.08)",color:ACCENT,fontSize:9,padding:"3px 8px",fontFamily:"monospace",letterSpacing:"0.1em"}}>{item.year}</div>}
+          <div style={{position:"absolute",bottom:14,left:16,right:16}}>
+            <h2 style={{fontSize:20,fontWeight:800,color:TEXT,margin:"0 0 4px",letterSpacing:"0.08em",fontFamily:"'Courier New',monospace",textShadow:`0 0 16px rgba(0,212,255,0.4)`}}>{item.title.toUpperCase()}</h2>
+            {item.director&&<div style={{fontSize:10,color:TEXT2,fontFamily:"monospace"}}>DIR // {item.director}</div>}
+          </div>
+        </div>
+        <div style={{flex:1,overflowY:"auto",padding:"20px 16px 0"}}>
+          <HudBox label="GÉNERO" style={{padding:"12px",marginBottom:14}}>
+            <div style={{display:"flex",gap:6,flexWrap:"wrap",alignItems:"center",paddingTop:4}}>
+              {genres.length>0?genres.map(g=><span key={g} style={{padding:"3px 10px",border:`1px solid ${ACCENT}44`,background:`rgba(0,212,255,0.08)`,color:ACCENT,fontSize:10,fontFamily:"monospace",letterSpacing:"0.06em"}}>{g.toUpperCase()}</span>):<span style={{fontSize:10,color:TEXT3,fontFamily:"monospace"}}>N/A</span>}
+              <button onClick={()=>setEditingGenre(v=>!v)} style={{width:22,height:22,border:`0.5px solid ${BORDER2}`,background:"transparent",color:TEXT3,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:10}}>✏️</button>
+            </div>
+            {editingGenre&&<div style={{display:"flex",gap:8,marginTop:10}}><input ref={genreRef} value={genre} onChange={e=>setGenre(e.target.value)} onKeyDown={e=>e.key==="Enter"&&setEditingGenre(false)} style={{flex:1,padding:"6px 10px",border:`1px solid ${ACCENT}`,background:SURFACE2,color:TEXT,fontSize:12,outline:"none",fontFamily:"monospace"}}/><button onClick={()=>setEditingGenre(false)} style={{padding:"6px 12px",border:"none",background:ACCENT,color:BG,fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"monospace"}}>OK</button></div>}
+          </HudBox>
+          {item.plot&&<HudBox label="SINOPSIS" style={{padding:"12px",marginBottom:14}}><p style={{fontSize:12,color:TEXT2,lineHeight:1.8,margin:"8px 0 0",fontFamily:"monospace"}}>{item.plot}</p></HudBox>}
+          <HudBox label="ESTADO" style={{padding:"12px",marginBottom:14}}>
+            <div style={{display:"flex",gap:8,paddingTop:6}}>
+              {["Pendiente","Viendo","Visto"].map(s=>(
+                <button key={s} onClick={()=>setStatus(s)} style={{flex:1,padding:"8px 0",border:status===s?`1px solid ${STATUS_COLOR[s]}`:`0.5px solid ${BORDER}`,background:status===s?`${STATUS_COLOR[s]}12`:"transparent",color:status===s?STATUS_COLOR[s]:TEXT3,fontSize:10,cursor:"pointer",fontFamily:"monospace",letterSpacing:"0.04em",display:"flex",alignItems:"center",justifyContent:"center",gap:4}}>
+                  <span style={{width:5,height:5,background:STATUS_COLOR[s],boxShadow:status===s?`0 0 5px ${STATUS_COLOR[s]}`:""}}/>
+                  {s.toUpperCase()}
+                </button>
+              ))}
+            </div>
+          </HudBox>
+          <HudBox label="VALORACIÓN" style={{padding:"12px",marginBottom:20}}>
+            <div style={{paddingTop:8}}><StarRating value={rating} onChange={setRating}/></div>
+          </HudBox>
+        </div>
+        <div style={{padding:"10px 16px 32px",display:"flex",gap:10,flexShrink:0,borderTop:`1px solid ${BORDER}`}}>
+          <button onClick={()=>{onDelete(item.id);close();}} style={{width:44,height:44,border:`1px solid rgba(255,51,102,0.4)`,background:"rgba(255,51,102,0.08)",color:"#ff3366",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>🗑</button>
+          <button onClick={save} style={{flex:1,padding:12,border:`1px solid ${ACCENT}`,background:`rgba(0,212,255,0.1)`,color:ACCENT,fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"monospace",letterSpacing:"0.12em",textShadow:`0 0 8px ${ACCENT}`}}>[ GUARDAR ]</button>
+        </div>
+      </div>
+    </>
+  );
+}
+
+function AddSheet({ tab, setTab, onAdd, loading, onClose }) {
+  const [mode, setMode] = useState(null);
+  const [title, setTitle] = useState("");
+  const [listening, setListening] = useState(false);
+  const [voiceStatus, setVoiceStatus] = useState("");
+  const inputRef = useRef(null);
+  useEffect(()=>{if(mode==="manual")setTimeout(()=>inputRef.current&&inputRef.current.focus(),100);},[mode]);
+  function parseVoice(text){const t=text.toLowerCase();let cat=tab,tp=text;const map={"película":"Películas","pelicula":"Películas","serie":"Series","documental":"Documentales","charla":"Charlas"};for(const[k,v]of Object.entries(map)){if(t.startsWith(k+" ")){cat=v;tp=text.slice(k.length+1).trim();break;}}return{cat,title:tp};}
+  function startVoice(){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){setVoiceStatus("// VOZ NO DISPONIBLE");return;}const rec=new SR();rec.lang="es-ES";rec.onstart=()=>{setListening(true);setVoiceStatus("// ESCUCHANDO...");};rec.onresult=async(e)=>{const spoken=e.results[0][0].transcript;setListening(false);setVoiceStatus(`// INPUT: "${spoken}"`);const{cat,title:t}=parseVoice(spoken);setTab(cat);await onAdd(t,cat);};rec.onerror=()=>{setListening(false);setVoiceStatus("// ERROR");};rec.onend=()=>setListening(false);rec.start();}
+  return (
+    <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.9)",zIndex:100,display:"flex",alignItems:"flex-end"}}>
+      <div onClick={e=>e.stopPropagation()} style={{width:"100%",background:PANEL,borderRadius:"12px 12px 0 0",border:`1px solid ${BORDER2}`,borderBottom:"none",padding:"16px 20px 44px",boxSizing:"border-box",position:"relative"}}>
+        <div style={{position:"absolute",top:0,left:"20%",right:"20%",height:"1px",background:`linear-gradient(90deg,transparent,${ACCENT},transparent)`,filter:"blur(1px)"}}/>
+        <div style={{width:36,height:2,background:SURFACE3,margin:"0 auto 20px"}}/>
+        {!mode?(
+          <>
+            <div style={{fontSize:9,color:TEXT3,fontFamily:"monospace",letterSpacing:"0.15em",marginBottom:4}}>// NUEVO REGISTRO</div>
+            <div style={{fontSize:15,fontWeight:700,marginBottom:20,color:TEXT,fontFamily:"'Courier New',monospace",letterSpacing:"0.1em"}}>AÑADIR TÍTULO</div>
+            <div style={{display:"flex",gap:12}}>
+              {[["MANUAL","✏️","Escribe el nombre",()=>setMode("manual")],["VOZ","🎙️","Di el título",()=>{setMode("voice");setTimeout(startVoice,200);}]].map(([lbl,ico,sub,fn])=>(
+                <HudBox key={lbl} style={{flex:1,padding:"18px 10px",cursor:"pointer"}} accent={ACCENT}>
+                  <button onClick={fn} style={{background:"transparent",border:"none",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:8,width:"100%"}}>
+                    <span style={{fontSize:26}}>{ico}</span>
+                    <span style={{fontSize:12,fontWeight:700,fontFamily:"monospace",color:ACCENT,letterSpacing:"0.08em"}}>{lbl}</span>
+                    <span style={{fontSize:10,color:TEXT2,fontFamily:"monospace"}}>{sub}</span>
+                  </button>
+                </HudBox>
+              ))}
+            </div>
+          </>
+        ):mode==="manual"?(
+          <>
+            <button onClick={()=>setMode(null)} style={{background:"transparent",border:"none",color:TEXT2,cursor:"pointer",fontSize:11,marginBottom:14,padding:0,fontFamily:"monospace"}}>← VOLVER</button>
+            <div style={{display:"flex",gap:6,marginBottom:16,overflowX:"auto"}}>
+              {CATEGORIES.map(c=><button key={c} onClick={()=>setTab(c)} style={{padding:"5px 12px",border:tab===c?`1px solid ${ACCENT}`:`0.5px solid ${BORDER}`,background:tab===c?`rgba(0,212,255,0.1)`:"transparent",color:tab===c?ACCENT:TEXT2,cursor:"pointer",fontSize:10,whiteSpace:"nowrap",fontFamily:"monospace"}}>{c.toUpperCase()}</button>)}
+            </div>
+            <input ref={inputRef} value={title} onChange={e=>setTitle(e.target.value)} onKeyDown={e=>e.key==="Enter"&&onAdd(title,tab)} placeholder="// NOMBRE DEL TÍTULO..." style={{width:"100%",padding:"12px 14px",border:`1px solid ${BORDER2}`,background:SURFACE2,color:TEXT,fontSize:13,boxSizing:"border-box",marginBottom:10,outline:"none",fontFamily:"monospace"}}/>
+            <button onClick={()=>onAdd(title,tab)} disabled={loading||!title.trim()} style={{width:"100%",padding:12,border:`1px solid ${title.trim()?ACCENT:BORDER}`,background:title.trim()?`rgba(0,212,255,0.1)`:"transparent",color:title.trim()?ACCENT:TEXT3,fontSize:12,fontWeight:700,cursor:title.trim()?"pointer":"default",fontFamily:"monospace",letterSpacing:"0.1em"}}>
+              {loading?"// PROCESANDO...":"[ AÑADIR ]"}
+            </button>
+          </>
+        ):(
+          <>
+            <button onClick={()=>{setMode(null);setVoiceStatus("");}} style={{background:"transparent",border:"none",color:TEXT2,cursor:"pointer",fontSize:11,marginBottom:20,padding:0,fontFamily:"monospace"}}>← VOLVER</button>
+            <div style={{display:"flex",flexDirection:"column",alignItems:"center",padding:"12px 0"}}>
+              <HudBox style={{width:72,height:72,display:"flex",alignItems:"center",justifyContent:"center",marginBottom:16}} accent={listening?ACCENT:BORDER}>
+                <span style={{fontSize:32}}>{listening?"🎙️":"🎤"}</span>
+              </HudBox>
+              <div style={{fontSize:12,fontWeight:600,marginBottom:6,color:listening?ACCENT:TEXT,fontFamily:"monospace"}}>{listening?"// ESCUCHANDO...":"// EN ESPERA"}</div>
+              <div style={{fontSize:10,color:TEXT2,textAlign:"center",marginBottom:20,fontFamily:"monospace"}}>{voiceStatus||'// DI "PELÍCULA MATRIX"'}</div>
+              {!listening&&<button onClick={startVoice} style={{padding:"10px 24px",border:`1px solid ${ACCENT}`,background:`rgba(0,212,255,0.1)`,color:ACCENT,fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"monospace",letterSpacing:"0.1em"}}>[ REINTENTAR ]</button>}
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  const [items, setItems] = useState([]);
+  const [tab, setTab] = useState("Películas");
+  const [loading, setLoading] = useState(false);
+  const [toast, setToast] = useState("");
+  const [showAdd, setShowAdd] = useState(false);
+  const [showShare, setShowShare] = useState(false);
+  const [showGenre, setShowGenre] = useState(false);
+  const [activeGenre, setActiveGenre] = useState("Todas");
+  const [selected, setSelected] = useState(null);
+
+  useEffect(()=>{try{const r=storage.get("media-items");if(r)setItems(JSON.parse(r.value));}catch{}},[]);
+  function save(list){setItems(list);try{storage.set("media-items",JSON.stringify(list));}catch{}}
+  async function addItem(rawTitle,cat){
+    if(!rawTitle.trim())return;
+    setLoading(true);setToast("// PROCESANDO...");
+    const info=await fetchInfo(rawTitle.trim());
+    save([{id:Date.now(),title:rawTitle.trim(),category:cat,year:info?.year||null,plot:info?.plot||null,genre:info?.genre||null,director:info?.director||null,rating:0,status:"Pendiente",addedAt:Date.now()},...items]);
+    setShowAdd(false);setLoading(false);
+    setToast(info?.year?`// REGISTRADO · ${info.year}`:"// REGISTRADO");
+    setTimeout(()=>setToast(""),2500);
+  }
+  const matchesGenre=(ig,f)=>{if(f==="Todas")return true;if(!ig)return false;const n=s=>s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[-\s]/g,"");const ff=n(f);return ig.split(/[,\/]/).map(g=>n(g.trim())).some(g=>g.includes(ff)||ff.includes(g));};
+  const filtered=items.filter(i=>i.category===tab&&matchesGenre(i.genre,activeGenre));
+  const stats={visto:filtered.filter(i=>i.status==="Visto").length,viendo:filtered.filter(i=>i.status==="Viendo").length,pendiente:filtered.filter(i=>i.status==="Pendiente"||!i.status).length};
+
+  return (
+    <div style={{maxWidth:390,margin:"0 auto",minHeight:"100vh",background:BG,display:"flex",flexDirection:"column",fontFamily:"system-ui,sans-serif",color:TEXT,position:"relative"}}>
+      <style>{`
+        @keyframes vhs-flicker{0%,100%{opacity:.025}50%{opacity:.04}}
+        @keyframes scanH{0%{transform:translateY(-100%)}100%{transform:translateY(100vh)}}
+        @keyframes cardPop{from{opacity:0;transform:scale(0.93)}to{opacity:1;transform:scale(1)}}
+        @keyframes fabGlow{0%,100%{box-shadow:0 0 0 3px rgba(0,212,255,0.1),0 0 14px rgba(0,212,255,0.2)}50%{box-shadow:0 0 0 5px rgba(0,212,255,0.06),0 0 22px rgba(0,212,255,0.3)}}
+        .card-item{animation:cardPop 0.35s cubic-bezier(0.16,1,0.3,1) both}
+        .card-item:active{transform:scale(0.94)!important;transition:transform 0.1s}
+        .fab-btn{animation:fabGlow 3s ease-in-out infinite}
+        .nav-btn:active{transform:scale(0.84);transition:transform 0.1s}
+        .dot-bg{position:fixed;inset:0;pointer-events:none;z-index:0;background-color:#03060f;background-image:linear-gradient(rgba(0,212,255,0.06) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,0.06) 1px,transparent 1px);background-size:32px 32px}
+        .dot-bg::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(0,102,255,0.15) 0%,transparent 60%)}
+        .dot-bg::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 50% 45%,rgba(3,6,15,0.65) 0%,transparent 75%)}
+        .vhs-noise{position:fixed;inset:0;pointer-events:none;z-index:9997}
+        .vhs-noise::before{content:"";position:absolute;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");background-size:160px 160px;opacity:.022;mix-blend-mode:screen;animation:vhs-flicker 0.12s infinite}
+        .vhs-noise::after{content:"";position:absolute;left:0;width:100%;height:2px;background:rgba(0,212,255,0.03);animation:scanH 6s linear infinite}
+      `}</style>
+      <div className="dot-bg"/>
+      <div className="vhs-noise"/>
+      {toast&&<div style={{position:"fixed",top:16,left:"50%",transform:"translateX(-50%)",background:`rgba(0,212,255,0.1)`,border:`1px solid ${ACCENT}`,color:ACCENT,padding:"8px 16px",fontSize:11,fontWeight:600,zIndex:400,whiteSpace:"nowrap",fontFamily:"monospace",letterSpacing:"0.06em"}}>{toast}</div>}
+
+      <div style={{padding:"10px 12px",zIndex:10,position:"relative"}}>
+        <HudBox style={{padding:"12px 14px"}} accent={ACCENT}>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+            <div style={{display:"flex",alignItems:"center",gap:10}}>
+              <LogoBase size={24}/>
+              <h1 style={{fontSize:13,fontWeight:800,margin:0,fontFamily:"'Courier New',monospace",letterSpacing:"0.18em"}}>
+                <span style={{color:TEXT}}>MENUDA</span>
+                <span style={{color:ACCENT,textShadow:`0 0 14px ${ACCENT}`,marginLeft:3}}>MOVIE</span>
+              </h1>
+            </div>
+          </div>
+        </HudBox>
+      </div>
+
+      <div style={{padding:"14px 12px 8px",zIndex:10,position:"relative"}}>
+        <HudBox label="STATUS" style={{padding:"8px 12px"}} accent={ACCENT}>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",paddingTop:4}}>
+            <div style={{display:"flex",gap:14}}>
+              {[["VISTO","#00ff88"],["VIENDO",ACCENT],["PENDIENTE","#ff3366"]].map(([s,c])=>(
+                <div key={s} style={{display:"flex",alignItems:"center",gap:5}}>
+                  <div style={{width:6,height:6,background:c,boxShadow:`0 0 5px ${c}`}}/>
+                  <span style={{fontSize:9,color:TEXT3,fontFamily:"monospace"}}>{s} <span style={{color:TEXT2}}>{stats[s.toLowerCase()]}</span></span>
+                </div>
+              ))}
+            </div>
+            <div style={{display:"flex",gap:6}}>
+              <button onClick={()=>setShowGenre(true)} style={{width:26,height:26,border:`1px solid ${activeGenre!=="Todas"?ACCENT:BORDER}`,background:activeGenre!=="Todas"?`rgba(0,212,255,0.1)`:"transparent",color:activeGenre!=="Todas"?ACCENT:TEXT2,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>⚡</button>
+              <button onClick={()=>setShowShare(true)} style={{width:26,height:26,border:`1px solid ${BORDER}`,background:"transparent",color:TEXT2,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>↗</button>
+            </div>
+          </div>
+        </HudBox>
+      </div>
+
+      <div style={{flex:1,padding:"0 12px 110px",position:"relative",zIndex:10}}>
+        {filtered.length===0
+          ?<HudBox style={{padding:"48px 20px",textAlign:"center",marginTop:8}} accent={TEXT3}>
+            <div style={{fontSize:36,marginBottom:12,opacity:0.1,color:ACCENT}}>{CAT_ICONS[tab]}</div>
+            <div style={{fontSize:11,color:TEXT2,fontFamily:"monospace"}}>// SIN REGISTROS</div>
+            <div style={{fontSize:10,color:TEXT3,marginTop:4,fontFamily:"monospace"}}>PULSA + PARA AÑADIR</div>
+          </HudBox>
+          :<div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8,paddingTop:2}}>
+            {filtered.map((item,i)=><ItemCard key={item.id} item={item} idx={i} onClick={()=>setSelected(item)}/>)}
+          </div>
+        }
+      </div>
+
+      <div style={{position:"fixed",bottom:80,left:"50%",transform:"translateX(-50%)",zIndex:50}}>
+        <button onClick={()=>setShowAdd(true)} className="fab-btn" style={{width:64,height:64,background:`rgba(0,212,255,0.1)`,border:`1px solid ${ACCENT}`,color:ACCENT,fontSize:32,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"monospace"}}>+</button>
+      </div>
+
+      <div style={{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:390,zIndex:10,padding:"6px 12px 14px",boxSizing:"border-box",background:"rgba(3,6,15,0.95)",backdropFilter:"blur(10px)",borderTop:`1px solid ${BORDER}`}}>
+        <div style={{display:"flex",gap:6}}>
+          {CATEGORIES.map(c=>(
+            <button key={c} onClick={()=>{setTab(c);setActiveGenre("Todas");}} className="nav-btn" style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:3,border:tab===c?`1px solid ${ACCENT}44`:`1px solid transparent`,background:tab===c?`rgba(0,212,255,0.06)`:"transparent",color:tab===c?ACCENT:TEXT3,cursor:"pointer",padding:"6px 0",position:"relative",transition:"all 0.2s",borderRadius:2}}>
+              {tab===c&&<div style={{position:"absolute",top:0,left:"10%",right:"10%",height:"1px",background:ACCENT,boxShadow:`0 0 4px ${ACCENT}`}}/>}
+              <PixelIcon grid={PIXEL_GRIDS[c]} size={18}/>
+              <span style={{fontSize:7,fontWeight:tab===c?700:400,fontFamily:"monospace",letterSpacing:"0.04em"}}>{c==="Películas"?"PELIS":c==="Documentales"?"DOCS":c.toUpperCase()}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {showGenre&&<div onClick={()=>setShowGenre(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.9)",zIndex:100,display:"flex",alignItems:"flex-end"}}>
+        <div onClick={e=>e.stopPropagation()} style={{width:"100%",background:PANEL,borderRadius:"12px 12px 0 0",border:`1px solid ${BORDER2}`,borderBottom:"none",padding:"16px 16px 44px",boxSizing:"border-box"}}>
+          <div style={{width:36,height:2,background:SURFACE3,margin:"0 auto 16px"}}/>
+          <div style={{fontSize:9,color:TEXT3,fontFamily:"monospace",letterSpacing:"0.14em",marginBottom:14}}>// FILTRAR POR GÉNERO</div>
+          <div style={{display:"flex",flexWrap:"wrap",gap:7}}>
+            {GENRES[tab].map(g=><button key={g} onClick={()=>{setActiveGenre(g);setShowGenre(false);}} style={{padding:"6px 12px",border:activeGenre===g?`1px solid ${ACCENT}`:`0.5px solid ${BORDER}`,background:activeGenre===g?`rgba(0,212,255,0.1)`:"transparent",color:activeGenre===g?ACCENT:TEXT2,cursor:"pointer",fontSize:10,fontFamily:"monospace"}}>{g.toUpperCase()}</button>)}
+          </div>
+        </div>
+      </div>}
+
+      {showShare&&<div onClick={()=>setShowShare(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.9)",zIndex:100,display:"flex",alignItems:"flex-end"}}>
+        <div onClick={e=>e.stopPropagation()} style={{width:"100%",background:PANEL,borderRadius:"12px 12px 0 0",border:`1px solid ${BORDER2}`,borderBottom:"none",padding:"16px 16px 40px",boxSizing:"border-box"}}>
+          <div style={{width:36,height:2,background:SURFACE3,margin:"0 auto 16px"}}/>
+          <div style={{fontSize:14,fontWeight:700,marginBottom:16,fontFamily:"monospace",color:TEXT}}>{tab.toUpperCase()} — {filtered.length} REG.</div>
+          <button onClick={()=>{exportToPDF(items,tab);setShowShare(false);}} style={{width:"100%",padding:12,border:`1px solid ${BORDER2}`,background:SURFACE2,color:TEXT,fontSize:12,cursor:"pointer",marginBottom:8,fontFamily:"monospace"}}>[ EXPORTAR PDF ]</button>
+          <button onClick={()=>{shareWhatsApp(items,tab);setShowShare(false);}} style={{width:"100%",padding:12,border:`1px solid ${BORDER2}`,background:SURFACE2,color:TEXT,fontSize:12,cursor:"pointer",fontFamily:"monospace"}}>[ WHATSAPP ]</button>
+        </div>
+      </div>}
+
+      {showAdd&&<AddSheet tab={tab} setTab={setTab} onAdd={addItem} loading={loading} onClose={()=>setShowAdd(false)}/>}
+      {selected&&<DetailPanel item={selected} onClose={()=>setSelected(null)} onDelete={id=>save(items.filter(i=>i.id!==id))} onUpdate={updated=>save(items.map(i=>i.id===updated.id?updated:i))}/>}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+  </script>
+</body>
+</html>
