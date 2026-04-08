@@ -12,6 +12,19 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { background: #03060f; font-family: system-ui, sans-serif; }
     #root { max-width: 390px; margin: 0 auto; }
+    @keyframes fpFade{0%{opacity:0.18;transform:scale(0.6)}30%{opacity:0.18;transform:scale(1)}100%{opacity:0;transform:scale(1.1)}}
+    .fingerprint{animation:fpFade 1.8s ease-out forwards;position:fixed;pointer-events:none;z-index:9999}
+    @keyframes vhs-flicker{0%,100%{opacity:.025}50%{opacity:.04}}
+    @keyframes scanH{0%{transform:translateY(-100%)}100%{transform:translateY(100vh)}}
+    @keyframes fabGlow{0%,100%{box-shadow:0 0 0 3px rgba(0,212,255,0.1),0 0 14px rgba(0,212,255,0.2)}50%{box-shadow:0 0 0 5px rgba(0,212,255,0.06),0 0 22px rgba(0,212,255,0.3)}}
+    .fab-btn{animation:fabGlow 3s ease-in-out infinite}
+    .nav-btn:active{transform:scale(0.84);transition:transform 0.1s}
+    .dot-bg{position:fixed;inset:0;pointer-events:none;z-index:0;background-color:#03060f;background-image:linear-gradient(rgba(0,212,255,0.06) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,0.06) 1px,transparent 1px);background-size:32px 32px}
+    .dot-bg::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(0,102,255,0.15) 0%,transparent 60%)}
+    .dot-bg::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 50% 45%,rgba(3,6,15,0.65) 0%,transparent 75%)}
+    .vhs-noise{position:fixed;inset:0;pointer-events:none;z-index:9997}
+    .vhs-noise::before{content:"";position:absolute;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");background-size:160px 160px;opacity:.022;mix-blend-mode:screen;animation:vhs-flicker 0.12s infinite}
+    .vhs-noise::after{content:"";position:absolute;left:0;width:100%;height:2px;background:rgba(0,212,255,0.03);animation:scanH 6s linear infinite}
   </style>
 </head>
 <body>
@@ -151,7 +164,7 @@ function ItemCard({ item, onClick, idx }) {
   const genres = item.genre ? item.genre.split(/[,\/]/).map(g=>g.trim()).filter(Boolean).slice(0,2) : [];
   const sc = STATUS_COLOR[item.status]||STATUS_COLOR["Pendiente"];
   return (
-    <div onClick={onClick} style={{animationDelay:`${idx*0.06}s`,cursor:"pointer",aspectRatio:"2/3",overflow:"hidden",position:"relative",background:`linear-gradient(160deg,${PANEL},${SURFACE2})`,outline:`1px solid rgba(0,212,255,0.12)`}}>
+    <div onClick={onClick} style={{cursor:"pointer",aspectRatio:"2/3",overflow:"hidden",position:"relative",background:`linear-gradient(160deg,${PANEL},${SURFACE2})`,outline:`1px solid rgba(0,212,255,0.12)`}}>
       {item.poster
         ? <img src={item.poster} alt={item.title} style={{width:"100%",height:"100%",objectFit:"cover",display:"block"}}/>
         : <div style={{position:"absolute",inset:0,backgroundImage:`linear-gradient(${BORDER} 1px,transparent 1px),linear-gradient(90deg,${BORDER} 1px,transparent 1px)`,backgroundSize:"14px 14px",display:"flex",alignItems:"center",justifyContent:"center"}}>
@@ -169,7 +182,7 @@ function ItemCard({ item, onClick, idx }) {
   );
 }
 
-function LinkCard({ item, onClick, idx }) {
+function LinkCard({ item, onClick }) {
   const sc = STATUS_COLOR[item.status]||STATUS_COLOR["Pendiente"];
   return (
     <div onClick={onClick} style={{cursor:"pointer",position:"relative",background:PANEL2,outline:`1px solid rgba(0,212,255,0.15)`,padding:"12px 14px",display:"flex",flexDirection:"column",gap:6}}>
@@ -206,10 +219,7 @@ function DetailPanel({ item, onClose, onDelete, onUpdate }) {
       <div style={{position:"fixed",left:0,right:0,bottom:0,zIndex:201,height:"92vh",background:PANEL,borderRadius:"12px 12px 0 0",border:`1px solid ${BORDER2}`,borderBottom:"none",transform:vis?"translateY(0)":"translateY(100%)",transition:"transform 1.004s cubic-bezier(0.16,1,0.3,1)",display:"flex",flexDirection:"column",overflow:"hidden"}}>
         <div style={{position:"absolute",top:0,left:"20%",right:"20%",height:"1px",background:`linear-gradient(90deg,transparent,${ACCENT},transparent)`,filter:"blur(1px)"}}/>
         <div style={{height:"38%",flexShrink:0,position:"relative",overflow:"hidden",display:"flex",alignItems:"center",justifyContent:"center",background:`linear-gradient(160deg,#030d1f,#050a20)`}}>
-          {item.poster&&!isLink
-            ? <img src={item.poster} alt={item.title} style={{width:"100%",height:"100%",objectFit:"cover",position:"absolute",inset:0,opacity:0.6}}/>
-            : <span style={{fontSize:130,opacity:0.06,color:ACCENT,userSelect:"none",fontFamily:"monospace"}}>{isLink?"⬢":CAT_ICONS[item.category]}</span>
-          }
+          {item.poster&&!isLink?<img src={item.poster} alt={item.title} style={{width:"100%",height:"100%",objectFit:"cover",position:"absolute",inset:0,opacity:0.6}}/>:<span style={{fontSize:130,opacity:0.06,color:ACCENT,userSelect:"none",fontFamily:"monospace"}}>{isLink?"⬢":CAT_ICONS[item.category]}</span>}
           <div style={{position:"absolute",bottom:0,left:0,right:0,height:"65%",background:`linear-gradient(transparent,${PANEL})`}}/>
           <button onClick={close} style={{position:"absolute",top:12,left:12,width:28,height:28,border:`1px solid ${BORDER2}`,background:"rgba(3,6,15,0.8)",color:ACCENT,cursor:"pointer",fontSize:12,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"monospace",zIndex:2}}>✕</button>
           {(item.year||isLink&&item.domain)&&<div style={{position:"absolute",top:12,right:12,border:`1px solid ${BORDER2}`,background:"rgba(0,212,255,0.08)",color:ACCENT,fontSize:9,padding:"3px 8px",fontFamily:"monospace",zIndex:2}}>{item.year||item.domain}</div>}
@@ -220,11 +230,9 @@ function DetailPanel({ item, onClose, onDelete, onUpdate }) {
           </div>
         </div>
         <div style={{flex:1,overflowY:"auto",padding:"20px 16px 0"}}>
-          {isLink&&item.url&&(
-            <button onClick={()=>window.open(item.url,"_blank")} style={{width:"100%",padding:"10px",border:`1px solid ${ACCENT}`,background:`rgba(0,212,255,0.08)`,color:ACCENT,fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"monospace",letterSpacing:"0.08em",marginBottom:14}}>[ ABRIR LINK ]</button>
-          )}
+          {isLink&&item.url&&<button onClick={()=>window.open(item.url,"_blank")} style={{width:"100%",padding:"10px",border:`1px solid ${ACCENT}`,background:`rgba(0,212,255,0.08)`,color:ACCENT,fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"monospace",marginBottom:14}}>[ ABRIR LINK ]</button>}
           <div style={{position:"relative",background:PANEL2,border:`0.5px solid ${ACCENT}44`,borderRadius:2,padding:"12px",marginBottom:16}}>
-            <div style={{position:"absolute",top:-9,left:10,background:PANEL2,padding:"0 6px",fontSize:10,color:ACCENT,fontFamily:"'Courier New',monospace",letterSpacing:"0.12em",fontWeight:700}}>TIPO / GÉNERO</div>
+            <div style={{position:"absolute",top:-9,left:10,background:PANEL2,padding:"0 6px",fontSize:10,color:ACCENT,fontFamily:"'Courier New',monospace",fontWeight:700}}>TIPO / GÉNERO</div>
             <div style={{display:"flex",gap:6,flexWrap:"wrap",alignItems:"center",paddingTop:6}}>
               {genres.length>0?genres.map(g=><span key={g} style={{padding:"4px 12px",border:`1px solid ${ACCENT}55`,background:`rgba(0,212,255,0.1)`,color:ACCENT,fontSize:11,fontFamily:"monospace",fontWeight:600}}>{g.toUpperCase()}</span>):<span style={{fontSize:11,color:TEXT2,fontFamily:"monospace"}}>N/A</span>}
               <button onClick={()=>setEditingGenre(v=>!v)} style={{width:24,height:24,border:`0.5px solid ${BORDER2}`,background:"transparent",color:TEXT2,cursor:"pointer",fontSize:12}}>✏️</button>
@@ -232,11 +240,11 @@ function DetailPanel({ item, onClose, onDelete, onUpdate }) {
             {editingGenre&&<div style={{display:"flex",gap:8,marginTop:10}}><input ref={genreRef} value={genre} onChange={e=>setGenre(e.target.value)} onKeyDown={e=>e.key==="Enter"&&setEditingGenre(false)} style={{flex:1,padding:"8px 10px",border:`1px solid ${ACCENT}`,background:SURFACE2,color:TEXT,fontSize:13,outline:"none",fontFamily:"monospace"}}/><button onClick={()=>setEditingGenre(false)} style={{padding:"8px 14px",border:"none",background:ACCENT,color:BG,fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"monospace"}}>OK</button></div>}
           </div>
           {(item.plot||item.description)&&<div style={{position:"relative",background:PANEL2,border:`0.5px solid ${ACCENT}44`,borderRadius:2,padding:"12px",marginBottom:16}}>
-            <div style={{position:"absolute",top:-9,left:10,background:PANEL2,padding:"0 6px",fontSize:10,color:ACCENT,fontFamily:"'Courier New',monospace",letterSpacing:"0.12em",fontWeight:700}}>DESCRIPCIÓN</div>
+            <div style={{position:"absolute",top:-9,left:10,background:PANEL2,padding:"0 6px",fontSize:10,color:ACCENT,fontFamily:"'Courier New',monospace",fontWeight:700}}>DESCRIPCIÓN</div>
             <p style={{fontSize:13,color:TEXT2,lineHeight:1.8,margin:"8px 0 0",fontFamily:"monospace"}}>{item.plot||item.description}</p>
           </div>}
           <div style={{position:"relative",background:PANEL2,border:`0.5px solid ${ACCENT}44`,borderRadius:2,padding:"12px",marginBottom:16}}>
-            <div style={{position:"absolute",top:-9,left:10,background:PANEL2,padding:"0 6px",fontSize:10,color:ACCENT,fontFamily:"'Courier New',monospace",letterSpacing:"0.12em",fontWeight:700}}>ESTADO</div>
+            <div style={{position:"absolute",top:-9,left:10,background:PANEL2,padding:"0 6px",fontSize:10,color:ACCENT,fontFamily:"'Courier New',monospace",fontWeight:700}}>ESTADO</div>
             <div style={{display:"flex",gap:8,paddingTop:8}}>
               {["Pendiente","Viendo","Visto"].map(s=>(
                 <button key={s} onClick={()=>setStatus(s)} style={{flex:1,padding:"10px 0",border:status===s?`1.5px solid ${STATUS_COLOR[s]}`:`0.5px solid rgba(255,255,255,0.15)`,background:status===s?`${STATUS_COLOR[s]}20`:"transparent",color:status===s?STATUS_COLOR[s]:"#8aaccc",fontSize:11,fontWeight:status===s?700:400,cursor:"pointer",fontFamily:"monospace",display:"flex",alignItems:"center",justifyContent:"center",gap:6,transition:"all 0.15s",boxShadow:status===s?`0 0 10px ${STATUS_COLOR[s]}44`:"none"}}>
@@ -246,9 +254,9 @@ function DetailPanel({ item, onClose, onDelete, onUpdate }) {
             </div>
           </div>
           {!isLink&&<div style={{position:"relative",background:PANEL2,border:`0.5px solid ${ACCENT}44`,borderRadius:2,padding:"12px",marginBottom:20}}>
-            <div style={{position:"absolute",top:-9,left:10,background:PANEL2,padding:"0 6px",fontSize:10,color:ACCENT,fontFamily:"'Courier New',monospace",letterSpacing:"0.12em",fontWeight:700}}>VALORACIÓN</div>
+            <div style={{position:"absolute",top:-9,left:10,background:PANEL2,padding:"0 6px",fontSize:10,color:ACCENT,fontFamily:"'Courier New',monospace",fontWeight:700}}>VALORACIÓN</div>
             <div style={{paddingTop:10,display:"flex",gap:8}}>
-              {[1,2,3,4,5].map(s=><span key={s} onClick={()=>onUpdate({...item,rating:s})||setRating(s)} style={{fontSize:26,color:s<=rating?ACCENT:"#2a4060",cursor:"pointer",textShadow:s<=rating?`0 0 10px ${ACCENT}`:"none"}}>{s<=rating?"◆":"◇"}</span>)}
+              {[1,2,3,4,5].map(s=><span key={s} onClick={()=>{setRating(s);onUpdate({...item,rating:s,status,genre});}} style={{fontSize:26,color:s<=rating?ACCENT:"#2a4060",cursor:"pointer",textShadow:s<=rating?`0 0 10px ${ACCENT}`:"none"}}>{s<=rating?"◆":"◇"}</span>)}
             </div>
           </div>}
         </div>
@@ -268,7 +276,7 @@ function AddSheet({ tab, setTab, onAdd, loading, onClose }) {
   const [voiceStatus, setVoiceStatus] = useState("");
   const inputRef = useRef(null);
   useEffect(()=>{if(mode==="manual")setTimeout(()=>inputRef.current&&inputRef.current.focus(),100);},[mode]);
-  function parseVoice(text){const t=text.toLowerCase();let cat=tab,tp=text;const map={"película":"Películas","pelicula":"Películas","serie":"Series","documental":"Documentales"};for(const[k,v]of Object.entries(map)){if(t.startsWith(k+" ")){cat=v;tp=text.slice(k.length+1).trim();break;}}return{cat,title:tp};}
+  function parseVoice(t){const tl=t.toLowerCase();let cat=tab,tp=t;const map={"película":"Películas","pelicula":"Películas","serie":"Series","documental":"Documentales"};for(const[k,v]of Object.entries(map)){if(tl.startsWith(k+" ")){cat=v;tp=t.slice(k.length+1).trim();break;}}return{cat,title:tp};}
   function startVoice(){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){setVoiceStatus("// VOZ NO DISPONIBLE");return;}const rec=new SR();rec.lang="es-ES";rec.onstart=()=>{setListening(true);setVoiceStatus("// ESCUCHANDO...");};rec.onresult=async(e)=>{const spoken=e.results[0][0].transcript;setListening(false);setVoiceStatus(`// "${spoken}"`);const{cat,title:t}=parseVoice(spoken);setTab(cat);await onAdd(t,cat);};rec.onerror=()=>{setListening(false);setVoiceStatus("// ERROR");};rec.onend=()=>setListening(false);rec.start();}
   return (
     <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.9)",zIndex:100,display:"flex",alignItems:"flex-end"}}>
@@ -277,7 +285,7 @@ function AddSheet({ tab, setTab, onAdd, loading, onClose }) {
         <div style={{width:36,height:2,background:SURFACE3,margin:"0 auto 20px"}}/>
         {!mode?(
           <>
-            <div style={{fontSize:10,color:TEXT2,fontFamily:"monospace",letterSpacing:"0.15em",marginBottom:4}}>// NUEVO REGISTRO</div>
+            <div style={{fontSize:10,color:TEXT2,fontFamily:"monospace",marginBottom:4}}>// NUEVO REGISTRO</div>
             <div style={{fontSize:16,fontWeight:700,marginBottom:20,color:TEXT,fontFamily:"'Courier New',monospace"}}>AÑADIR TÍTULO</div>
             <div style={{display:"flex",gap:12}}>
               {[["MANUAL","✏️","Escribe el nombre",()=>setMode("manual")],["VOZ","🎙️","Di el título",()=>{setMode("voice");setTimeout(startVoice,200);}]].map(([lbl,ico,sub,fn])=>(
@@ -329,10 +337,10 @@ function AddLinkSheet({ onAdd, loading, onClose }) {
       <div onClick={e=>e.stopPropagation()} style={{width:"100%",background:PANEL,borderRadius:"12px 12px 0 0",border:`1px solid ${BORDER2}`,borderBottom:"none",padding:"16px 20px 44px",boxSizing:"border-box",position:"relative"}}>
         <div style={{position:"absolute",top:0,left:"20%",right:"20%",height:"1px",background:`linear-gradient(90deg,transparent,${ACCENT},transparent)`}}/>
         <div style={{width:36,height:2,background:SURFACE3,margin:"0 auto 20px"}}/>
-        <div style={{fontSize:10,color:TEXT2,fontFamily:"monospace",letterSpacing:"0.15em",marginBottom:4}}>// NUEVO LINK</div>
+        <div style={{fontSize:10,color:TEXT2,fontFamily:"monospace",marginBottom:4}}>// NUEVO LINK</div>
         <div style={{fontSize:16,fontWeight:700,marginBottom:16,color:TEXT,fontFamily:"'Courier New',monospace"}}>AÑADIR URL</div>
         <input ref={inputRef} value={url} onChange={e=>setUrl(e.target.value)} onKeyDown={e=>e.key==="Enter"&&onAdd(url,"Links",tag)} placeholder="https://..." style={{width:"100%",padding:"13px 14px",border:`1px solid ${BORDER2}`,background:SURFACE2,color:TEXT,fontSize:14,boxSizing:"border-box",marginBottom:12,outline:"none",fontFamily:"monospace"}}/>
-        <div style={{fontSize:10,color:TEXT2,fontFamily:"monospace",letterSpacing:"0.1em",marginBottom:8}}>// TIPO</div>
+        <div style={{fontSize:10,color:TEXT2,fontFamily:"monospace",marginBottom:8}}>// TIPO</div>
         <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:14}}>
           {tags.map(t=><button key={t} onClick={()=>setTag(t)} style={{padding:"6px 12px",border:tag===t?`1px solid ${ACCENT}`:`0.5px solid ${BORDER}`,background:tag===t?`rgba(0,212,255,0.1)`:"transparent",color:tag===t?ACCENT:TEXT2,cursor:"pointer",fontSize:11,fontFamily:"monospace"}}>{t.toUpperCase()}</button>)}
         </div>
@@ -355,6 +363,54 @@ function App() {
   const [showGenre, setShowGenre] = useState(false);
   const [activeGenre, setActiveGenre] = useState("Todas");
   const [selected, setSelected] = useState(null);
+  const [glitches, setGlitches] = useState([]);
+  const [fingerprints, setFingerprints] = useState([]);
+  const clickCountRef = useRef(0);
+  const clickTimerRef = useRef(null);
+  const shakeRef = useRef({ lastX: null, lastY: null, lastT: null });
+
+  function triggerGlitch(intensity=1, originY=null) {
+    const id = Date.now() + Math.random();
+    const count = Math.min(Math.ceil(intensity), 6);
+    const pct = originY !== null ? (originY / window.innerHeight) * 100 : 50;
+    const newGlitches = Array.from({length:count}, (_,i) => ({
+      id: id + i,
+      h: Math.random()*18+2,
+      y: Math.max(0, Math.min(95, pct + (Math.random()-0.5)*25)),
+      shift: (Math.random()-0.5) * 55 * intensity,
+      color: Math.random()>0.5,
+    }));
+    setGlitches(g => [...g, ...newGlitches]);
+    setTimeout(() => setGlitches(g => g.filter(x => !newGlitches.find(n => n.id === x.id))), 180 + intensity * 60);
+  }
+
+  function handleEmptyClick(e) {
+    const x = e.clientX, y = e.clientY;
+    const id = Date.now() + Math.random();
+    setFingerprints(f => [...f, { id, x, y }]);
+    setTimeout(() => setFingerprints(f => f.filter(p => p.id !== id)), 1800);
+    clickCountRef.current += 1;
+    clearTimeout(clickTimerRef.current);
+    triggerGlitch(clickCountRef.current, y);
+    clickTimerRef.current = setTimeout(() => { clickCountRef.current = 0; }, 1200);
+  }
+
+  useEffect(() => {
+    function handleMotion(e) {
+      const acc = e.accelerationIncludingGravity;
+      if (!acc) return;
+      const now = Date.now();
+      const s = shakeRef.current;
+      if (s.lastX === null) { s.lastX = acc.x; s.lastY = acc.y; s.lastT = now; return; }
+      const dt = (now - s.lastT) / 1000;
+      if (dt < 0.05) return;
+      const force = (Math.abs((acc.x||0)-s.lastX) + Math.abs((acc.y||0)-s.lastY)) / dt;
+      s.lastX = acc.x; s.lastY = acc.y; s.lastT = now;
+      if (force > 80) triggerGlitch(Math.min(force/40, 5));
+    }
+    window.addEventListener("devicemotion", handleMotion);
+    return () => window.removeEventListener("devicemotion", handleMotion);
+  }, []);
 
   useEffect(()=>{try{const v=localStorage.getItem("media-items");if(v)setItems(JSON.parse(v));}catch{}},[]);
   function save(list){setItems(list);try{localStorage.setItem("media-items",JSON.stringify(list));}catch{}}
@@ -386,21 +442,29 @@ function App() {
 
   return (
     <div style={{maxWidth:390,margin:"0 auto",minHeight:"100vh",background:BG,display:"flex",flexDirection:"column",fontFamily:"system-ui,sans-serif",color:TEXT,position:"relative"}}>
-      <style>{`
-        @keyframes vhs-flicker{0%,100%{opacity:.025}50%{opacity:.04}}
-        @keyframes scanH{0%{transform:translateY(-100%)}100%{transform:translateY(100vh)}}
-        @keyframes fabGlow{0%,100%{box-shadow:0 0 0 3px rgba(0,212,255,0.1),0 0 14px rgba(0,212,255,0.2)}50%{box-shadow:0 0 0 5px rgba(0,212,255,0.06),0 0 22px rgba(0,212,255,0.3)}}
-        .fab-btn{animation:fabGlow 3s ease-in-out infinite}
-        .nav-btn:active{transform:scale(0.84);transition:transform 0.1s}
-        .dot-bg{position:fixed;inset:0;pointer-events:none;z-index:0;background-color:#03060f;background-image:linear-gradient(rgba(0,212,255,0.06) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,0.06) 1px,transparent 1px);background-size:32px 32px}
-        .dot-bg::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(0,102,255,0.15) 0%,transparent 60%)}
-        .dot-bg::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 50% 45%,rgba(3,6,15,0.65) 0%,transparent 75%)}
-        .vhs-noise{position:fixed;inset:0;pointer-events:none;z-index:9997}
-        .vhs-noise::before{content:"";position:absolute;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");background-size:160px 160px;opacity:.022;mix-blend-mode:screen;animation:vhs-flicker 0.12s infinite}
-        .vhs-noise::after{content:"";position:absolute;left:0;width:100%;height:2px;background:rgba(0,212,255,0.03);animation:scanH 6s linear infinite}
-      `}</style>
       <div className="dot-bg"/>
       <div className="vhs-noise"/>
+
+      {/* Fingerprints */}
+      {fingerprints.map(p=>(
+        <div key={p.id} className="fingerprint" style={{left:p.x-30,top:p.y-30,width:60,height:60}}>
+          <svg viewBox="0 0 60 60" width="60" height="60">
+            <ellipse cx="30" cy="30" rx="8" ry="8" fill="none" stroke={ACCENT} strokeWidth="1.2"/>
+            <ellipse cx="30" cy="30" rx="13" ry="12" fill="none" stroke={ACCENT} strokeWidth="1"/>
+            <ellipse cx="30" cy="30" rx="18" ry="17" fill="none" stroke={ACCENT} strokeWidth="0.9"/>
+            <ellipse cx="30" cy="30" rx="23" ry="21" fill="none" stroke={ACCENT} strokeWidth="0.8"/>
+            <ellipse cx="30" cy="30" rx="27" ry="25" fill="none" stroke={ACCENT} strokeWidth="0.7"/>
+            <line x1="30" y1="22" x2="30" y2="5" stroke={ACCENT} strokeWidth="0.8"/>
+            <line x1="30" y1="38" x2="30" y2="55" stroke={ACCENT} strokeWidth="0.8"/>
+          </svg>
+        </div>
+      ))}
+
+      {/* Ambient glitches */}
+      {glitches.map(g=>(
+        <div key={g.id} style={{position:"fixed",left:0,right:0,top:`${g.y}%`,height:`${g.h}px`,zIndex:9998,pointerEvents:"none",transform:`translateX(${g.shift}px)`,background:g.color?`rgba(0,212,255,0.22)`:`rgba(0,0,0,0.6)`,mixBlendMode:g.color?"screen":"darken"}}/>
+      ))}
+
       {toast&&<div style={{position:"fixed",top:16,left:"50%",transform:"translateX(-50%)",background:`rgba(0,212,255,0.1)`,border:`1px solid ${ACCENT}`,color:ACCENT,padding:"8px 16px",fontSize:12,fontWeight:600,zIndex:400,whiteSpace:"nowrap",fontFamily:"monospace"}}>{toast}</div>}
 
       <div style={{padding:"10px 12px",zIndex:10,position:"relative"}}>
@@ -417,7 +481,7 @@ function App() {
 
       <div style={{padding:"14px 12px 8px",zIndex:10,position:"relative"}}>
         <div style={{position:"relative",background:PANEL2,border:`0.5px solid ${ACCENT}44`,borderRadius:2,padding:"8px 12px"}}>
-          <div style={{position:"absolute",top:-9,left:10,background:PANEL2,padding:"0 6px",fontSize:10,color:ACCENT,fontFamily:"'Courier New',monospace",letterSpacing:"0.12em",fontWeight:700}}>STATUS</div>
+          <div style={{position:"absolute",top:-9,left:10,background:PANEL2,padding:"0 6px",fontSize:10,color:ACCENT,fontFamily:"'Courier New',monospace",fontWeight:700}}>STATUS</div>
           <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",paddingTop:4}}>
             <div style={{display:"flex",gap:14}}>
               {[["VISTO","#00ff88"],["VIENDO",ACCENT],["PENDIENTE","#ff3366"]].map(([s,c])=>(
@@ -439,7 +503,7 @@ function App() {
         </div>
       </div>
 
-      <div style={{flex:1,padding:"0 12px 110px",position:"relative",zIndex:10}}>
+      <div style={{flex:1,padding:"0 12px 110px",position:"relative",zIndex:10}} onClick={filtered.length===0?handleEmptyClick:undefined}>
         {filtered.length===0
           ?<div style={{position:"relative",background:PANEL2,border:`0.5px solid ${TEXT3}44`,borderRadius:2,padding:"48px 20px",textAlign:"center",marginTop:8}}>
             <div style={{fontSize:36,marginBottom:12,opacity:0.1,color:ACCENT}}>{CAT_ICONS[tab]}</div>
@@ -476,7 +540,7 @@ function App() {
       {showGenre&&<div onClick={()=>setShowGenre(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.9)",zIndex:100,display:"flex",alignItems:"flex-end"}}>
         <div onClick={e=>e.stopPropagation()} style={{width:"100%",background:PANEL,borderRadius:"12px 12px 0 0",border:`1px solid ${BORDER2}`,borderBottom:"none",padding:"16px 16px 44px",boxSizing:"border-box"}}>
           <div style={{width:36,height:2,background:SURFACE3,margin:"0 auto 16px"}}/>
-          <div style={{fontSize:10,color:TEXT2,fontFamily:"monospace",letterSpacing:"0.14em",marginBottom:14}}>// FILTRAR</div>
+          <div style={{fontSize:10,color:TEXT2,fontFamily:"monospace",marginBottom:14}}>// FILTRAR</div>
           <div style={{display:"flex",flexWrap:"wrap",gap:7}}>
             {GENRES[tab].map(g=><button key={g} onClick={()=>{setActiveGenre(g);setShowGenre(false);}} style={{padding:"7px 12px",border:activeGenre===g?`1px solid ${ACCENT}`:`0.5px solid ${BORDER}`,background:activeGenre===g?`rgba(0,212,255,0.1)`:"transparent",color:activeGenre===g?ACCENT:TEXT2,cursor:"pointer",fontSize:11,fontFamily:"monospace"}}>{g.toUpperCase()}</button>)}
           </div>
