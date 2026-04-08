@@ -1,4 +1,25 @@
-import { useState, useEffect, useRef } from "react";
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="MenudaMovie"/>
+  <meta name="theme-color" content="#03060f"/>
+  <title>MM Menuda Movie</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #03060f; font-family: system-ui, sans-serif; }
+    #root { max-width: 390px; margin: 0 auto; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script type="text/babel" data-presets="react">
 
 const TMDB_KEY = "080819d6debe8bdd42f10a6e9c15f7ce";
 const ACCENT = "#00d4ff";
@@ -31,6 +52,8 @@ const SMILE_HAPPY=[[0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0],[0,0,0,1,1,1,1,1,1,1,1,1,
 const SMILE_FLAT=[[0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0],[0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0],[0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],[1,1,1,1,2,2,1,1,1,1,1,2,2,1,1,1,1],[1,1,1,1,2,2,1,1,1,1,1,2,2,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,2,2,2,2,2,2,2,2,2,2,2,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],[0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0],[0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0],[0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0]];
 const VHS_TAPE=[[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],[1,0,2,2,2,2,2,2,2,2,2,2,2,2,2,0,1],[1,0,2,0,0,0,0,0,0,0,0,0,0,0,2,0,1],[1,0,2,0,0,0,0,0,0,0,0,0,0,0,2,0,1],[1,0,2,2,2,2,2,2,2,2,2,2,2,2,2,0,1],[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],[1,1,1,0,0,0,0,0,0,0,0,0,0,0,1,1,1],[1,1,1,0,3,3,3,0,0,0,3,3,3,0,1,1,1],[1,1,1,0,3,3,3,0,0,0,3,3,3,0,1,1,1],[1,1,1,0,0,0,0,0,0,0,0,0,0,0,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]];
 const LOGO_PHASES=[{grid:SMILE_HAPPY,dur:3000},{grid:SMILE_FLAT,dur:800},{grid:VHS_TAPE,dur:2500},{grid:SMILE_FLAT,dur:800}];
+
+const { useState, useEffect, useRef } = React;
 
 async function fetchInfo(title) {
   try {
@@ -89,37 +112,27 @@ function LogoBase({ size }) {
   const grid = LOGO_PHASES[phase].grid;
   return (
     <svg width={size} height={size} viewBox="0 0 17 16" style={{imageRendering:"pixelated",filter:glitching?`drop-shadow(0 0 6px ${ACCENT}) drop-shadow(3px 0 0 rgba(255,0,100,0.8)) drop-shadow(-3px 0 0 rgba(0,255,200,0.8))`:`drop-shadow(0 0 10px ${ACCENT}88)`,transform:glitching?"translateX(3px)":"translateX(0)",transition:"filter 0.05s,transform 0.05s"}}>
-      {grid.map((row,y)=>row.map((cell,x)=>{ if(!cell) return null; return <rect key={`${x}-${y}`} x={x} y={y} width={1} height={1} fill={cell===2?"#0a1628":ACCENT}/>; }))}
+      {grid.map((row,y)=>row.map((cell,x)=>{ if(!cell) return null; return React.createElement('rect',{key:`${x}-${y}`,x,y,width:1,height:1,fill:cell===2?"#0a1628":ACCENT}); }))}
     </svg>
   );
 }
 
 function PixelIcon({ grid, size=20 }) {
-  return (
-    <svg width={size} height={size} viewBox={`0 0 ${grid[0].length} ${grid.length}`} style={{imageRendering:"pixelated",display:"block"}}>
-      {grid.map((row,y)=>row.map((cell,x)=>cell?<rect key={`${x}-${y}`} x={x} y={y} width={1} height={1} fill="currentColor"/>:null))}
-    </svg>
+  return React.createElement('svg',{width:size,height:size,viewBox:`0 0 ${grid[0].length} ${grid.length}`,style:{imageRendering:"pixelated",display:"block"}},
+    grid.map((row,y)=>row.map((cell,x)=>cell?React.createElement('rect',{key:`${x}-${y}`,x,y,width:1,height:1,fill:"currentColor"}):null))
   );
 }
 
 function HudBox({ label, children, style={}, accent=ACCENT }) {
-  return (
-    <div style={{position:"relative",background:PANEL2,border:`0.5px solid ${accent}44`,borderRadius:2,...style}}>
-      {label&&<div style={{position:"absolute",top:-9,left:10,background:PANEL2,padding:"0 6px",fontSize:10,color:accent,fontFamily:"'Courier New',monospace",letterSpacing:"0.12em",fontWeight:700}}>{label}</div>}
-      {children}
-    </div>
+  return React.createElement('div',{style:{position:"relative",background:PANEL2,border:`0.5px solid ${accent}44`,borderRadius:2,...style}},
+    label && React.createElement('div',{style:{position:"absolute",top:-9,left:10,background:PANEL2,padding:"0 6px",fontSize:10,color:accent,fontFamily:"'Courier New',monospace",letterSpacing:"0.12em",fontWeight:700}},label),
+    children
   );
 }
 
 function StarRating({ value, onChange }) {
-  return (
-    <div style={{display:"flex",gap:8}}>
-      {[1,2,3,4,5].map(s=>(
-        <span key={s} onClick={()=>onChange(s)} style={{fontSize:26,color:s<=value?ACCENT:"#2a4060",cursor:"pointer",textShadow:s<=value?`0 0 10px ${ACCENT}`:"none",transition:"all 0.15s"}}>
-          {s<=value?"◆":"◇"}
-        </span>
-      ))}
-    </div>
+  return React.createElement('div',{style:{display:"flex",gap:8}},
+    [1,2,3,4,5].map(s=>React.createElement('span',{key:s,onClick:()=>onChange(s),style:{fontSize:26,color:s<=value?ACCENT:"#2a4060",cursor:"pointer",textShadow:s<=value?`0 0 10px ${ACCENT}`:"none",transition:"all 0.15s"}},s<=value?"◆":"◇"))
   );
 }
 
@@ -138,7 +151,7 @@ function ItemCard({ item, onClick, idx }) {
   const genres = item.genre ? item.genre.split(/[,\/]/).map(g=>g.trim()).filter(Boolean).slice(0,2) : [];
   const sc = STATUS_COLOR[item.status]||STATUS_COLOR["Pendiente"];
   return (
-    <div onClick={onClick} className="card-item" style={{animationDelay:`${idx*0.06}s`,cursor:"pointer",aspectRatio:"2/3",overflow:"hidden",position:"relative",background:`linear-gradient(160deg,${PANEL},${SURFACE2})`,outline:`1px solid rgba(0,212,255,0.12)`}}>
+    <div onClick={onClick} style={{animationDelay:`${idx*0.06}s`,cursor:"pointer",aspectRatio:"2/3",overflow:"hidden",position:"relative",background:`linear-gradient(160deg,${PANEL},${SURFACE2})`,outline:`1px solid rgba(0,212,255,0.12)`}}>
       {item.poster
         ? <img src={item.poster} alt={item.title} style={{width:"100%",height:"100%",objectFit:"cover",display:"block"}}/>
         : <div style={{position:"absolute",inset:0,backgroundImage:`linear-gradient(${BORDER} 1px,transparent 1px),linear-gradient(90deg,${BORDER} 1px,transparent 1px)`,backgroundSize:"14px 14px",display:"flex",alignItems:"center",justifyContent:"center"}}>
@@ -159,7 +172,7 @@ function ItemCard({ item, onClick, idx }) {
 function LinkCard({ item, onClick, idx }) {
   const sc = STATUS_COLOR[item.status]||STATUS_COLOR["Pendiente"];
   return (
-    <div onClick={onClick} className="card-item" style={{animationDelay:`${idx*0.06}s`,cursor:"pointer",position:"relative",background:PANEL2,outline:`1px solid rgba(0,212,255,0.15)`,padding:"12px 14px",display:"flex",flexDirection:"column",gap:6}}>
+    <div onClick={onClick} style={{cursor:"pointer",position:"relative",background:PANEL2,outline:`1px solid rgba(0,212,255,0.15)`,padding:"12px 14px",display:"flex",flexDirection:"column",gap:6}}>
       <div style={{position:"absolute",inset:0,backgroundImage:`linear-gradient(${BORDER} 1px,transparent 1px),linear-gradient(90deg,${BORDER} 1px,transparent 1px)`,backgroundSize:"20px 20px",opacity:0.2,pointerEvents:"none"}}/>
       <div style={{display:"flex",alignItems:"center",gap:8,position:"relative"}}>
         <div style={{width:7,height:7,background:sc,boxShadow:`0 0 6px ${sc}`,flexShrink:0}}/>
@@ -180,7 +193,7 @@ function DetailPanel({ item, onClose, onDelete, onUpdate }) {
   const [genre, setGenre] = useState(item.genre||"");
   const [editingGenre, setEditingGenre] = useState(false);
   const genreRef = useRef(null);
-  useEffect(()=>{if(editingGenre)setTimeout(()=>genreRef.current?.focus(),50);},[editingGenre]);
+  useEffect(()=>{if(editingGenre)setTimeout(()=>genreRef.current&&genreRef.current.focus(),50);},[editingGenre]);
   useEffect(()=>{const t=setTimeout(()=>setVis(true),10);return()=>clearTimeout(t);},[]);
   function close(){setVis(false);setTimeout(onClose,1004);}
   function save(){onUpdate({...item,rating,status,genre});close();}
@@ -206,19 +219,24 @@ function DetailPanel({ item, onClose, onDelete, onUpdate }) {
             {isLink&&item.url&&<div style={{fontSize:9,color:TEXT2,fontFamily:"monospace",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{item.url}</div>}
           </div>
         </div>
-        <div style={{flex:1,overflowY:"auto",padding:"20px 16px 0",scrollbarWidth:"none"}}>
+        <div style={{flex:1,overflowY:"auto",padding:"20px 16px 0"}}>
           {isLink&&item.url&&(
             <button onClick={()=>window.open(item.url,"_blank")} style={{width:"100%",padding:"10px",border:`1px solid ${ACCENT}`,background:`rgba(0,212,255,0.08)`,color:ACCENT,fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"monospace",letterSpacing:"0.08em",marginBottom:14}}>[ ABRIR LINK ]</button>
           )}
-          <HudBox label="TIPO / GÉNERO" style={{padding:"12px",marginBottom:16}}>
+          <div style={{position:"relative",background:PANEL2,border:`0.5px solid ${ACCENT}44`,borderRadius:2,padding:"12px",marginBottom:16}}>
+            <div style={{position:"absolute",top:-9,left:10,background:PANEL2,padding:"0 6px",fontSize:10,color:ACCENT,fontFamily:"'Courier New',monospace",letterSpacing:"0.12em",fontWeight:700}}>TIPO / GÉNERO</div>
             <div style={{display:"flex",gap:6,flexWrap:"wrap",alignItems:"center",paddingTop:6}}>
               {genres.length>0?genres.map(g=><span key={g} style={{padding:"4px 12px",border:`1px solid ${ACCENT}55`,background:`rgba(0,212,255,0.1)`,color:ACCENT,fontSize:11,fontFamily:"monospace",fontWeight:600}}>{g.toUpperCase()}</span>):<span style={{fontSize:11,color:TEXT2,fontFamily:"monospace"}}>N/A</span>}
               <button onClick={()=>setEditingGenre(v=>!v)} style={{width:24,height:24,border:`0.5px solid ${BORDER2}`,background:"transparent",color:TEXT2,cursor:"pointer",fontSize:12}}>✏️</button>
             </div>
             {editingGenre&&<div style={{display:"flex",gap:8,marginTop:10}}><input ref={genreRef} value={genre} onChange={e=>setGenre(e.target.value)} onKeyDown={e=>e.key==="Enter"&&setEditingGenre(false)} style={{flex:1,padding:"8px 10px",border:`1px solid ${ACCENT}`,background:SURFACE2,color:TEXT,fontSize:13,outline:"none",fontFamily:"monospace"}}/><button onClick={()=>setEditingGenre(false)} style={{padding:"8px 14px",border:"none",background:ACCENT,color:BG,fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"monospace"}}>OK</button></div>}
-          </HudBox>
-          {(item.plot||item.description)&&<HudBox label="DESCRIPCIÓN" style={{padding:"12px",marginBottom:16}}><p style={{fontSize:13,color:TEXT2,lineHeight:1.8,margin:"8px 0 0",fontFamily:"monospace"}}>{item.plot||item.description}</p></HudBox>}
-          <HudBox label="ESTADO" style={{padding:"12px",marginBottom:16}}>
+          </div>
+          {(item.plot||item.description)&&<div style={{position:"relative",background:PANEL2,border:`0.5px solid ${ACCENT}44`,borderRadius:2,padding:"12px",marginBottom:16}}>
+            <div style={{position:"absolute",top:-9,left:10,background:PANEL2,padding:"0 6px",fontSize:10,color:ACCENT,fontFamily:"'Courier New',monospace",letterSpacing:"0.12em",fontWeight:700}}>DESCRIPCIÓN</div>
+            <p style={{fontSize:13,color:TEXT2,lineHeight:1.8,margin:"8px 0 0",fontFamily:"monospace"}}>{item.plot||item.description}</p>
+          </div>}
+          <div style={{position:"relative",background:PANEL2,border:`0.5px solid ${ACCENT}44`,borderRadius:2,padding:"12px",marginBottom:16}}>
+            <div style={{position:"absolute",top:-9,left:10,background:PANEL2,padding:"0 6px",fontSize:10,color:ACCENT,fontFamily:"'Courier New',monospace",letterSpacing:"0.12em",fontWeight:700}}>ESTADO</div>
             <div style={{display:"flex",gap:8,paddingTop:8}}>
               {["Pendiente","Viendo","Visto"].map(s=>(
                 <button key={s} onClick={()=>setStatus(s)} style={{flex:1,padding:"10px 0",border:status===s?`1.5px solid ${STATUS_COLOR[s]}`:`0.5px solid rgba(255,255,255,0.15)`,background:status===s?`${STATUS_COLOR[s]}20`:"transparent",color:status===s?STATUS_COLOR[s]:"#8aaccc",fontSize:11,fontWeight:status===s?700:400,cursor:"pointer",fontFamily:"monospace",display:"flex",alignItems:"center",justifyContent:"center",gap:6,transition:"all 0.15s",boxShadow:status===s?`0 0 10px ${STATUS_COLOR[s]}44`:"none"}}>
@@ -226,15 +244,16 @@ function DetailPanel({ item, onClose, onDelete, onUpdate }) {
                 </button>
               ))}
             </div>
-          </HudBox>
-          {!isLink&&<HudBox label="VALORACIÓN" style={{padding:"12px",marginBottom:20}}>
-            <div style={{paddingTop:10}}><StarRating value={rating} onChange={setRating}/></div>
-          </HudBox>}
+          </div>
+          {!isLink&&<div style={{position:"relative",background:PANEL2,border:`0.5px solid ${ACCENT}44`,borderRadius:2,padding:"12px",marginBottom:20}}>
+            <div style={{position:"absolute",top:-9,left:10,background:PANEL2,padding:"0 6px",fontSize:10,color:ACCENT,fontFamily:"'Courier New',monospace",letterSpacing:"0.12em",fontWeight:700}}>VALORACIÓN</div>
+            <div style={{paddingTop:10,display:"flex",gap:8}}>
+              {[1,2,3,4,5].map(s=><span key={s} onClick={()=>onUpdate({...item,rating:s})||setRating(s)} style={{fontSize:26,color:s<=rating?ACCENT:"#2a4060",cursor:"pointer",textShadow:s<=rating?`0 0 10px ${ACCENT}`:"none"}}>{s<=rating?"◆":"◇"}</span>)}
+            </div>
+          </div>}
         </div>
         <div style={{padding:"10px 16px 32px",display:"flex",gap:10,flexShrink:0,borderTop:`1px solid ${BORDER}`}}>
-          <button onClick={()=>{onDelete(item.id);close();}} style={{width:44,height:44,border:`1px solid rgba(255,51,102,0.4)`,background:"rgba(255,51,102,0.08)",color:"#ff3366",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
-          </button>
+          <button onClick={()=>{onDelete(item.id);close();}} style={{width:44,height:44,border:`1px solid rgba(255,51,102,0.4)`,background:"rgba(255,51,102,0.08)",color:"#ff3366",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>🗑</button>
           <button onClick={save} style={{flex:1,padding:12,border:`1px solid ${ACCENT}`,background:`rgba(0,212,255,0.1)`,color:ACCENT,fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:"monospace",letterSpacing:"0.12em"}}>[ GUARDAR ]</button>
         </div>
       </div>
@@ -248,7 +267,7 @@ function AddSheet({ tab, setTab, onAdd, loading, onClose }) {
   const [listening, setListening] = useState(false);
   const [voiceStatus, setVoiceStatus] = useState("");
   const inputRef = useRef(null);
-  useEffect(()=>{if(mode==="manual")setTimeout(()=>inputRef.current?.focus(),100);},[mode]);
+  useEffect(()=>{if(mode==="manual")setTimeout(()=>inputRef.current&&inputRef.current.focus(),100);},[mode]);
   function parseVoice(text){const t=text.toLowerCase();let cat=tab,tp=text;const map={"película":"Películas","pelicula":"Películas","serie":"Series","documental":"Documentales"};for(const[k,v]of Object.entries(map)){if(t.startsWith(k+" ")){cat=v;tp=text.slice(k.length+1).trim();break;}}return{cat,title:tp};}
   function startVoice(){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){setVoiceStatus("// VOZ NO DISPONIBLE");return;}const rec=new SR();rec.lang="es-ES";rec.onstart=()=>{setListening(true);setVoiceStatus("// ESCUCHANDO...");};rec.onresult=async(e)=>{const spoken=e.results[0][0].transcript;setListening(false);setVoiceStatus(`// "${spoken}"`);const{cat,title:t}=parseVoice(spoken);setTab(cat);await onAdd(t,cat);};rec.onerror=()=>{setListening(false);setVoiceStatus("// ERROR");};rec.onend=()=>setListening(false);rec.start();}
   return (
@@ -259,23 +278,21 @@ function AddSheet({ tab, setTab, onAdd, loading, onClose }) {
         {!mode?(
           <>
             <div style={{fontSize:10,color:TEXT2,fontFamily:"monospace",letterSpacing:"0.15em",marginBottom:4}}>// NUEVO REGISTRO</div>
-            <div style={{fontSize:16,fontWeight:700,marginBottom:20,color:TEXT,fontFamily:"'Courier New',monospace",letterSpacing:"0.1em"}}>AÑADIR TÍTULO</div>
+            <div style={{fontSize:16,fontWeight:700,marginBottom:20,color:TEXT,fontFamily:"'Courier New',monospace"}}>AÑADIR TÍTULO</div>
             <div style={{display:"flex",gap:12}}>
               {[["MANUAL","✏️","Escribe el nombre",()=>setMode("manual")],["VOZ","🎙️","Di el título",()=>{setMode("voice");setTimeout(startVoice,200);}]].map(([lbl,ico,sub,fn])=>(
-                <HudBox key={lbl} style={{flex:1,padding:"18px 10px",cursor:"pointer"}} accent={ACCENT}>
-                  <button onClick={fn} style={{background:"transparent",border:"none",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:8,width:"100%"}}>
-                    <span style={{fontSize:26}}>{ico}</span>
-                    <span style={{fontSize:13,fontWeight:700,fontFamily:"monospace",color:ACCENT}}>{lbl}</span>
-                    <span style={{fontSize:11,color:TEXT2,fontFamily:"monospace"}}>{sub}</span>
-                  </button>
-                </HudBox>
+                <div key={lbl} onClick={fn} style={{flex:1,padding:"18px 10px",cursor:"pointer",background:PANEL2,border:`0.5px solid ${ACCENT}44`,borderRadius:2,display:"flex",flexDirection:"column",alignItems:"center",gap:8}}>
+                  <span style={{fontSize:26}}>{ico}</span>
+                  <span style={{fontSize:13,fontWeight:700,fontFamily:"monospace",color:ACCENT}}>{lbl}</span>
+                  <span style={{fontSize:11,color:TEXT2,fontFamily:"monospace"}}>{sub}</span>
+                </div>
               ))}
             </div>
           </>
         ):mode==="manual"?(
           <>
             <button onClick={()=>setMode(null)} style={{background:"transparent",border:"none",color:TEXT2,cursor:"pointer",fontSize:12,marginBottom:14,padding:0,fontFamily:"monospace"}}>← VOLVER</button>
-            <div style={{display:"flex",gap:6,marginBottom:16,overflowX:"auto",scrollbarWidth:"none"}}>
+            <div style={{display:"flex",gap:6,marginBottom:16,overflowX:"auto"}}>
               {CATEGORIES.filter(c=>c!=="Links").map(c=><button key={c} onClick={()=>setTab(c)} style={{padding:"6px 12px",border:tab===c?`1px solid ${ACCENT}`:`0.5px solid ${BORDER}`,background:tab===c?`rgba(0,212,255,0.1)`:"transparent",color:tab===c?ACCENT:TEXT2,cursor:"pointer",fontSize:11,whiteSpace:"nowrap",fontFamily:"monospace"}}>{c.toUpperCase()}</button>)}
             </div>
             <input ref={inputRef} value={title} onChange={e=>setTitle(e.target.value)} onKeyDown={e=>e.key==="Enter"&&onAdd(title,tab)} placeholder="// NOMBRE DEL TÍTULO..." style={{width:"100%",padding:"13px 14px",border:`1px solid ${BORDER2}`,background:SURFACE2,color:TEXT,fontSize:14,boxSizing:"border-box",marginBottom:10,outline:"none",fontFamily:"monospace"}}/>
@@ -287,9 +304,9 @@ function AddSheet({ tab, setTab, onAdd, loading, onClose }) {
           <>
             <button onClick={()=>{setMode(null);setVoiceStatus("");}} style={{background:"transparent",border:"none",color:TEXT2,cursor:"pointer",fontSize:12,marginBottom:20,padding:0,fontFamily:"monospace"}}>← VOLVER</button>
             <div style={{display:"flex",flexDirection:"column",alignItems:"center",padding:"12px 0"}}>
-              <HudBox style={{width:72,height:72,display:"flex",alignItems:"center",justifyContent:"center",marginBottom:16,boxShadow:listening?`0 0 20px rgba(0,212,255,0.3)`:"none"}} accent={listening?ACCENT:BORDER}>
+              <div style={{width:72,height:72,display:"flex",alignItems:"center",justifyContent:"center",marginBottom:16,background:PANEL2,border:`0.5px solid ${listening?ACCENT:BORDER}44`,boxShadow:listening?`0 0 20px rgba(0,212,255,0.3)`:"none"}}>
                 <svg width="28" height="28" viewBox="0 0 24 24" fill={listening?ACCENT:TEXT3}><path d="M12 1a4 4 0 0 1 4 4v6a4 4 0 0 1-8 0V5a4 4 0 0 1 4-4zm0 2a2 2 0 0 0-2 2v6a2 2 0 0 0 4 0V5a2 2 0 0 0-2-2zm-1 15.93A8 8 0 0 1 4.07 13H6.1a6 6 0 0 0 11.8 0h2.03A8 8 0 0 1 13 18.93V21h2v2H9v-2h2v-2.07z"/></svg>
-              </HudBox>
+              </div>
               <div style={{fontSize:13,fontWeight:600,marginBottom:6,color:listening?ACCENT:TEXT,fontFamily:"monospace"}}>{listening?"// ESCUCHANDO...":"// EN ESPERA"}</div>
               <div style={{fontSize:11,color:TEXT2,textAlign:"center",marginBottom:20,fontFamily:"monospace"}}>{voiceStatus||'// DI "PELÍCULA MATRIX"'}</div>
               {!listening&&<button onClick={startVoice} style={{padding:"10px 24px",border:`1px solid ${ACCENT}`,background:`rgba(0,212,255,0.1)`,color:ACCENT,fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"monospace",letterSpacing:"0.1em"}}>[ REINTENTAR ]</button>}
@@ -305,7 +322,7 @@ function AddLinkSheet({ onAdd, loading, onClose }) {
   const [url, setUrl] = useState("");
   const [tag, setTag] = useState("Otro");
   const inputRef = useRef(null);
-  useEffect(()=>{ setTimeout(()=>inputRef.current?.focus(),100); },[]);
+  useEffect(()=>{ setTimeout(()=>inputRef.current&&inputRef.current.focus(),100); },[]);
   const tags = ["Artículo","Vídeo","Herramienta","Tutorial","Noticia","Podcast","Música","Otro"];
   return (
     <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.9)",zIndex:100,display:"flex",alignItems:"flex-end"}}>
@@ -313,7 +330,7 @@ function AddLinkSheet({ onAdd, loading, onClose }) {
         <div style={{position:"absolute",top:0,left:"20%",right:"20%",height:"1px",background:`linear-gradient(90deg,transparent,${ACCENT},transparent)`}}/>
         <div style={{width:36,height:2,background:SURFACE3,margin:"0 auto 20px"}}/>
         <div style={{fontSize:10,color:TEXT2,fontFamily:"monospace",letterSpacing:"0.15em",marginBottom:4}}>// NUEVO LINK</div>
-        <div style={{fontSize:16,fontWeight:700,marginBottom:16,color:TEXT,fontFamily:"'Courier New',monospace",letterSpacing:"0.1em"}}>AÑADIR URL</div>
+        <div style={{fontSize:16,fontWeight:700,marginBottom:16,color:TEXT,fontFamily:"'Courier New',monospace"}}>AÑADIR URL</div>
         <input ref={inputRef} value={url} onChange={e=>setUrl(e.target.value)} onKeyDown={e=>e.key==="Enter"&&onAdd(url,"Links",tag)} placeholder="https://..." style={{width:"100%",padding:"13px 14px",border:`1px solid ${BORDER2}`,background:SURFACE2,color:TEXT,fontSize:14,boxSizing:"border-box",marginBottom:12,outline:"none",fontFamily:"monospace"}}/>
         <div style={{fontSize:10,color:TEXT2,fontFamily:"monospace",letterSpacing:"0.1em",marginBottom:8}}>// TIPO</div>
         <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:14}}>
@@ -327,7 +344,7 @@ function AddLinkSheet({ onAdd, loading, onClose }) {
   );
 }
 
-export default function App() {
+function App() {
   const [items, setItems] = useState([]);
   const [tab, setTab] = useState("Películas");
   const [loading, setLoading] = useState(false);
@@ -339,14 +356,14 @@ export default function App() {
   const [activeGenre, setActiveGenre] = useState("Todas");
   const [selected, setSelected] = useState(null);
 
-  useEffect(()=>{(async()=>{try{const r=await window.storage.get("media-items");if(r)setItems(JSON.parse(r.value));}catch{}})();},[]);
-  async function save(list){setItems(list);try{await window.storage.set("media-items",JSON.stringify(list));}catch{}}
+  useEffect(()=>{try{const v=localStorage.getItem("media-items");if(v)setItems(JSON.parse(v));}catch{}},[]);
+  function save(list){setItems(list);try{localStorage.setItem("media-items",JSON.stringify(list));}catch{}}
 
   async function addItem(rawTitle,cat){
     if(!rawTitle.trim())return;
     setLoading(true);setToast("// BUSCANDO PORTADA...");
     const info=await fetchInfo(rawTitle.trim());
-    await save([{id:Date.now(),title:rawTitle.trim(),category:cat,year:info?.year||null,plot:info?.plot||null,genre:info?.genre||null,director:null,poster:info?.poster||null,rating:0,status:"Pendiente",addedAt:Date.now()},...items]);
+    save([{id:Date.now(),title:rawTitle.trim(),category:cat,year:info?.year||null,plot:info?.plot||null,genre:info?.genre||null,director:null,poster:info?.poster||null,rating:0,status:"Pendiente",addedAt:Date.now()},...items]);
     setShowAdd(false);setLoading(false);
     setToast(info?.poster?"// PORTADA ENCONTRADA ✓":"// REGISTRADO");
     setTimeout(()=>setToast(""),2500);
@@ -357,7 +374,7 @@ export default function App() {
     setLoading(true);setToast("// ANALIZANDO URL...");
     const info=await fetchLinkInfo(url.trim());
     let domain="";try{domain=new URL(url.trim()).hostname.replace("www.","");}catch{}
-    await save([{id:Date.now(),title:info?.title||url,description:info?.description||null,url:url.trim(),domain:info?.domain||domain,category:cat,genre:tag||info?.type||"Otro",poster:null,rating:0,status:"Pendiente",addedAt:Date.now()},...items]);
+    save([{id:Date.now(),title:info?.title||url,description:info?.description||null,url:url.trim(),domain:info?.domain||domain,category:cat,genre:tag||info?.type||"Otro",poster:null,rating:0,status:"Pendiente",addedAt:Date.now()},...items]);
     setShowAddLink(false);setLoading(false);
     setToast("// LINK GUARDADO ✓");
     setTimeout(()=>setToast(""),2000);
@@ -372,10 +389,7 @@ export default function App() {
       <style>{`
         @keyframes vhs-flicker{0%,100%{opacity:.025}50%{opacity:.04}}
         @keyframes scanH{0%{transform:translateY(-100%)}100%{transform:translateY(100vh)}}
-        @keyframes cardPop{from{opacity:0;transform:scale(0.93)}to{opacity:1;transform:scale(1)}}
         @keyframes fabGlow{0%,100%{box-shadow:0 0 0 3px rgba(0,212,255,0.1),0 0 14px rgba(0,212,255,0.2)}50%{box-shadow:0 0 0 5px rgba(0,212,255,0.06),0 0 22px rgba(0,212,255,0.3)}}
-        .card-item{animation:cardPop 0.35s cubic-bezier(0.16,1,0.3,1) both}
-        .card-item:active{transform:scale(0.97)!important;transition:transform 0.1s}
         .fab-btn{animation:fabGlow 3s ease-in-out infinite}
         .nav-btn:active{transform:scale(0.84);transition:transform 0.1s}
         .dot-bg{position:fixed;inset:0;pointer-events:none;z-index:0;background-color:#03060f;background-image:linear-gradient(rgba(0,212,255,0.06) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,0.06) 1px,transparent 1px);background-size:32px 32px}
@@ -390,7 +404,7 @@ export default function App() {
       {toast&&<div style={{position:"fixed",top:16,left:"50%",transform:"translateX(-50%)",background:`rgba(0,212,255,0.1)`,border:`1px solid ${ACCENT}`,color:ACCENT,padding:"8px 16px",fontSize:12,fontWeight:600,zIndex:400,whiteSpace:"nowrap",fontFamily:"monospace"}}>{toast}</div>}
 
       <div style={{padding:"10px 12px",zIndex:10,position:"relative"}}>
-        <HudBox style={{padding:"12px 14px"}} accent={ACCENT}>
+        <div style={{position:"relative",background:PANEL2,border:`0.5px solid ${ACCENT}44`,borderRadius:2,padding:"12px 14px"}}>
           <div style={{display:"flex",alignItems:"center",gap:10}}>
             <LogoBase size={24}/>
             <h1 style={{fontSize:13,fontWeight:800,margin:0,fontFamily:"'Courier New',monospace",letterSpacing:"0.18em"}}>
@@ -398,11 +412,12 @@ export default function App() {
               <span style={{color:ACCENT,textShadow:`0 0 14px ${ACCENT}`,marginLeft:3}}>MOVIE</span>
             </h1>
           </div>
-        </HudBox>
+        </div>
       </div>
 
       <div style={{padding:"14px 12px 8px",zIndex:10,position:"relative"}}>
-        <HudBox label="STATUS" style={{padding:"8px 12px"}} accent={ACCENT}>
+        <div style={{position:"relative",background:PANEL2,border:`0.5px solid ${ACCENT}44`,borderRadius:2,padding:"8px 12px"}}>
+          <div style={{position:"absolute",top:-9,left:10,background:PANEL2,padding:"0 6px",fontSize:10,color:ACCENT,fontFamily:"'Courier New',monospace",letterSpacing:"0.12em",fontWeight:700}}>STATUS</div>
           <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",paddingTop:4}}>
             <div style={{display:"flex",gap:14}}>
               {[["VISTO","#00ff88"],["VIENDO",ACCENT],["PENDIENTE","#ff3366"]].map(([s,c])=>(
@@ -421,16 +436,16 @@ export default function App() {
               </button>
             </div>
           </div>
-        </HudBox>
+        </div>
       </div>
 
       <div style={{flex:1,padding:"0 12px 110px",position:"relative",zIndex:10}}>
         {filtered.length===0
-          ?<HudBox style={{padding:"48px 20px",textAlign:"center",marginTop:8}} accent={TEXT3}>
+          ?<div style={{position:"relative",background:PANEL2,border:`0.5px solid ${TEXT3}44`,borderRadius:2,padding:"48px 20px",textAlign:"center",marginTop:8}}>
             <div style={{fontSize:36,marginBottom:12,opacity:0.1,color:ACCENT}}>{CAT_ICONS[tab]}</div>
             <div style={{fontSize:12,color:TEXT2,fontFamily:"monospace"}}>// SIN REGISTROS</div>
             <div style={{fontSize:11,color:TEXT3,marginTop:4,fontFamily:"monospace"}}>PULSA + PARA AÑADIR</div>
-          </HudBox>
+          </div>
           :<div style={{display:"grid",gridTemplateColumns:tab==="Links"?"1fr":"repeat(3,1fr)",gap:8,paddingTop:2}}>
             {filtered.map((item,i)=>tab==="Links"
               ?<LinkCard key={item.id} item={item} idx={i} onClick={()=>setSelected(item)}/>
@@ -483,3 +498,8 @@ export default function App() {
     </div>
   );
 }
+
+ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(App));
+  </script>
+</body>
+</html>
