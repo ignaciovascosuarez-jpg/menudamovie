@@ -2,568 +2,493 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
-  <meta name="apple-mobile-web-app-capable" content="yes"/>
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-  <meta name="apple-mobile-web-app-title" content="MenudaMovie"/>
-  <meta name="theme-color" content="#03060f"/>
-  <title>MM Menuda Movie</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Menuda Movie</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: #03060f; font-family: system-ui, sans-serif; }
-    #root { max-width: 390px; margin: 0 auto; }
-    @keyframes fpFade{0%{opacity:0.18;transform:scale(0.6)}30%{opacity:0.18;transform:scale(1)}100%{opacity:0;transform:scale(1.1)}}
-    .fingerprint{animation:fpFade 1.8s ease-out forwards;position:fixed;pointer-events:none;z-index:9999}
-    @keyframes vhs-flicker{0%,100%{opacity:.025}50%{opacity:.04}}
-    @keyframes scanH{0%{transform:translateY(-100%)}100%{transform:translateY(100vh)}}
-    @keyframes fabGlow{0%,100%{box-shadow:0 0 0 3px rgba(0,212,255,0.1),0 0 14px rgba(0,212,255,0.2)}50%{box-shadow:0 0 0 5px rgba(0,212,255,0.06),0 0 22px rgba(0,212,255,0.3)}}
-    .fab-btn{animation:fabGlow 3s ease-in-out infinite}
-    .nav-btn:active{transform:scale(0.84);transition:transform 0.1s}
-    .dot-bg{position:fixed;inset:0;pointer-events:none;z-index:0;background-color:#03060f;background-image:linear-gradient(rgba(0,212,255,0.06) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,0.06) 1px,transparent 1px);background-size:32px 32px}
-    .dot-bg::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(0,102,255,0.15) 0%,transparent 60%)}
-    .dot-bg::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 50% 45%,rgba(3,6,15,0.65) 0%,transparent 75%)}
-    .vhs-noise{position:fixed;inset:0;pointer-events:none;z-index:9997}
-    .vhs-noise::before{content:"";position:absolute;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");background-size:160px 160px;opacity:.022;mix-blend-mode:screen;animation:vhs-flicker 0.12s infinite}
-    .vhs-noise::after{content:"";position:absolute;left:0;width:100%;height:2px;background:rgba(0,212,255,0.03);animation:scanH 6s linear infinite}
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:#03060f;color:#e8f4ff;font-family:system-ui,sans-serif}
+    button{cursor:pointer}
+    ::-webkit-scrollbar{display:none}
   </style>
 </head>
 <body>
   <div id="root"></div>
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <script type="text/babel" data-presets="react">
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
 
-const TMDB_KEY = "080819d6debe8bdd42f10a6e9c15f7ce";
-const ACCENT = "#00d4ff";
-const BG = "#03060f";
-const PANEL = "#0a0e18";
-const PANEL2 = "#0e1520";
-const SURFACE2 = "#0d1425";
-const SURFACE3 = "#121b30";
-const BORDER = "rgba(0,212,255,0.12)";
-const BORDER2 = "rgba(0,212,255,0.3)";
-const TEXT = "#e8f4ff";
-const TEXT2 = "#8aaccc";
-const TEXT3 = "#3a5070";
-const STATUS_COLOR = { "Visto": "#00ff88", "Viendo": "#00d4ff", "Pendiente": "#ff3366" };
-const CATEGORIES = ["Películas", "Series", "Documentales", "Links"];
-const CAT_ICONS = { "Películas": "◈", "Series": "⬡", "Documentales": "◎", "Links": "⬢" };
-const GENRES = {
-  "Películas": ["Todas","Terror","Comedia","Acción","Drama","Thriller","Ciencia ficción","Animación","Romance","Aventura","Fantasía","Misterio","Crimen","Bélica","Western","Musical","Biográfica","Histórica","Superhéroes"],
-  "Series": ["Todas","Drama","Comedia","Terror","Thriller","Crimen","Ciencia ficción","Fantasía","Animación","Reality","Documental","Miniserie","Acción","Romance","Histórica","Superhéroes"],
-  "Documentales": ["Todas","Naturaleza","Historia","Crimen","Ciencia","Tecnología","Música","Deporte","Sociedad","Política","Arte","Gastronomía","Viajes","Biografía","Medioambiente"],
-  "Links": ["Todos","Artículo","Vídeo","Herramienta","Tutorial","Noticia","Podcast","Música","Otro"],
-};
-const PIXEL_GRIDS = {
-  "Películas":[[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,0,1,0,0,0,0,0,0,0,0,0,0,1,0,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],[1,0,0,1,0,0,0,0,0,0,0,0,1,0,0,1],[1,0,0,1,0,0,0,0,0,0,0,0,1,0,0,1],[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],[1,0,0,1,0,0,0,0,0,0,0,0,1,0,0,1],[1,0,0,1,0,0,0,0,0,0,0,0,1,0,0,1],[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]],
-  "Series":[[0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1],[1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1],[1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1],[1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1],[1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1],[1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[0,0,0,0,0,1,1,0,0,1,1,0,0,0,0,0],[0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0],[0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0]],
-  "Documentales":[[0,1,1,1,1,1,1,1,1,1,1,0,1,1,1,0],[0,1,0,0,0,0,0,0,0,0,1,0,1,0,1,0],[0,1,0,0,0,0,0,0,0,0,1,0,1,1,1,0],[0,1,0,0,1,0,0,0,0,0,1,0,0,0,0,0],[0,1,0,0,1,1,0,0,0,0,1,0,0,0,0,0],[0,1,0,0,1,1,1,0,0,0,1,0,0,0,0,0],[0,1,0,0,1,1,0,0,0,0,1,0,0,0,0,0],[0,1,0,0,1,0,0,0,0,0,1,0,0,0,0,0],[0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0],[0,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],
-  "Links":[[0,0,0,1,1,1,1,1,1,1,1,1,0,0,0,0],[0,0,1,1,0,0,0,0,0,0,0,1,1,0,0,0],[0,1,1,0,0,0,0,0,0,0,0,0,1,1,0,0],[0,1,0,0,1,1,1,1,1,1,0,0,0,1,0,0],[0,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0],[0,1,0,0,1,1,1,1,1,1,0,0,0,1,0,0],[0,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0],[0,1,0,0,1,1,1,1,0,0,0,0,0,1,0,0],[0,1,1,0,0,0,0,0,0,0,0,0,1,1,0,0],[0,0,1,1,0,0,0,0,0,0,0,1,1,0,0,0],[0,0,0,1,1,1,1,1,1,1,1,1,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],
-};
-const SMILE_HAPPY=[[0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0],[0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0],[0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],[1,1,1,1,2,2,1,1,1,1,1,2,2,1,1,1,1],[1,1,1,1,2,2,1,1,1,1,1,2,2,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,2,1,1,1,1,1,1,1,1,1,2,1,1,1],[1,1,1,1,2,1,1,1,1,1,1,1,2,1,1,1,1],[1,1,1,1,1,2,2,2,2,2,2,2,1,1,1,1,1],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],[0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0],[0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0],[0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0]];
-const SMILE_FLAT=[[0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0],[0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0],[0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],[1,1,1,1,2,2,1,1,1,1,1,2,2,1,1,1,1],[1,1,1,1,2,2,1,1,1,1,1,2,2,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,2,2,2,2,2,2,2,2,2,2,2,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],[0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0],[0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0],[0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0]];
-const VHS_TAPE=[[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],[1,0,2,2,2,2,2,2,2,2,2,2,2,2,2,0,1],[1,0,2,0,0,0,0,0,0,0,0,0,0,0,2,0,1],[1,0,2,0,0,0,0,0,0,0,0,0,0,0,2,0,1],[1,0,2,2,2,2,2,2,2,2,2,2,2,2,2,0,1],[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],[1,1,1,0,0,0,0,0,0,0,0,0,0,0,1,1,1],[1,1,1,0,3,3,3,0,0,0,3,3,3,0,1,1,1],[1,1,1,0,3,3,3,0,0,0,3,3,3,0,1,1,1],[1,1,1,0,0,0,0,0,0,0,0,0,0,0,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]];
-const LOGO_PHASES=[{grid:SMILE_HAPPY,dur:3000},{grid:SMILE_FLAT,dur:800},{grid:VHS_TAPE,dur:2500},{grid:SMILE_FLAT,dur:800}];
+    // ── NOTA: el sistema de perfiles compartidos (window.storage) no está
+    // disponible fuera del entorno de Claude. Para la versión local, los
+    // perfiles y el "siguiendo" se guardan solo en localStorage.
+    // Para activar el social, conecta Supabase o Firebase y reemplaza
+    // publishProfile() y fetchUserById().
 
-const { useState, useEffect, useRef } = React;
+    const TMDB_KEY = "080819d6debe8bdd42f10a6e9c15f7ce";
+    const BG="#03060f",PANEL="#0a0e18",PANEL2="#0e1520",SURFACE2="#0d1425",SURFACE3="#121b30";
+    const BORDER="rgba(0,212,255,0.12)",TEXT="#e8f4ff",TEXT2="#8aaccc",TEXT3="#3a5070";
+    const STATUS_COLOR={"Visto":"#00ff88","Viendo":"#00d4ff","Pendiente":"#ff3366"};
+    const CATEGORIES=["Películas","Series","Documentales","Links"];
+    const CAT_ICONS={"Películas":"◈","Series":"⬡","Documentales":"◎","Links":"⬢"};
+    const GENRES={
+      "Películas":["Todas","Terror","Comedia","Acción","Drama","Thriller","Ciencia ficción","Animación","Romance","Aventura","Fantasía","Misterio","Crimen","Bélica","Western","Musical","Biográfica","Histórica","Superhéroes"],
+      "Series":["Todas","Drama","Comedia","Terror","Thriller","Crimen","Ciencia ficción","Fantasía","Animación","Reality","Documental","Miniserie","Acción","Romance","Histórica","Superhéroes"],
+      "Documentales":["Todas","Naturaleza","Historia","Crimen","Ciencia","Tecnología","Música","Deporte","Sociedad","Política","Arte","Gastronomía","Viajes","Biografía","Medioambiente"],
+      "Links":["Todos","Artículo","Vídeo","Herramienta","Tutorial","Noticia","Podcast","Música","Otro"],
+    };
+    const ACCENTS=[{name:"CYAN",color:"#00d4ff"},{name:"ROJO",color:"#ff3355"},{name:"VERDE",color:"#00ff88"},{name:"MORADO",color:"#b060ff"}];
 
-async function fetchInfo(title) {
-  try {
-    const r = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${TMDB_KEY}&query=${encodeURIComponent(title)}&language=es-ES`);
-    const d = await r.json();
-    const result = d.results?.[0];
-    if (!result) return null;
-    const poster = result.poster_path ? `https://image.tmdb.org/t/p/w500${result.poster_path}` : null;
-    const year = (result.release_date || result.first_air_date || "").slice(0,4);
-    const plot = result.overview || "";
-    const genreMap = {28:"Acción",12:"Aventura",16:"Animación",35:"Comedia",80:"Crimen",99:"Documental",18:"Drama",14:"Fantasía",36:"Histórica",27:"Terror",9648:"Misterio",10749:"Romance",878:"Ciencia ficción",53:"Thriller",10752:"Bélica",37:"Western"};
-    const genre = (result.genre_ids||[]).slice(0,3).map(id=>genreMap[id]).filter(Boolean).join(", ");
-    return { poster, year, plot, genre };
-  } catch { return null; }
-}
+    const PIXEL_GRIDS={
+      "Películas":[[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,0,1,0,0,0,0,0,0,0,0,0,0,1,0,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],[1,0,0,1,0,0,0,0,0,0,0,0,1,0,0,1],[1,0,0,1,0,0,0,0,0,0,0,0,1,0,0,1],[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],[1,0,0,1,0,0,0,0,0,0,0,0,1,0,0,1],[1,0,0,1,0,0,0,0,0,0,0,0,1,0,0,1],[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]],
+      "Series":[[0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1],[1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1],[1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1],[1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1],[1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1],[1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[0,0,0,0,0,1,1,0,0,1,1,0,0,0,0,0],[0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0],[0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0]],
+      "Documentales":[[0,1,1,1,1,1,1,1,1,1,1,0,1,1,1,0],[0,1,0,0,0,0,0,0,0,0,1,0,1,0,1,0],[0,1,0,0,0,0,0,0,0,0,1,0,1,1,1,0],[0,1,0,0,1,0,0,0,0,0,1,0,0,0,0,0],[0,1,0,0,1,1,0,0,0,0,1,0,0,0,0,0],[0,1,0,0,1,1,1,0,0,0,1,0,0,0,0,0],[0,1,0,0,1,1,0,0,0,0,1,0,0,0,0,0],[0,1,0,0,1,0,0,0,0,0,1,0,0,0,0,0],[0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0],[0,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],
+      "Links":[[0,0,0,1,1,1,1,1,1,1,1,1,0,0,0,0],[0,0,1,1,0,0,0,0,0,0,0,1,1,0,0,0],[0,1,1,0,0,0,0,0,0,0,0,0,1,1,0,0],[0,1,0,0,1,1,1,1,1,1,0,0,0,1,0,0],[0,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0],[0,1,0,0,1,1,1,1,1,1,0,0,0,1,0,0],[0,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0],[0,1,0,0,1,1,1,1,0,0,0,0,0,1,0,0],[0,1,1,0,0,0,0,0,0,0,0,0,1,1,0,0],[0,0,1,1,0,0,0,0,0,0,0,1,1,0,0,0],[0,0,0,1,1,1,1,1,1,1,1,1,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],
+    };
+    const SMILE_HAPPY=[[0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0],[0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0],[0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],[1,1,1,1,2,2,1,1,1,1,1,2,2,1,1,1,1],[1,1,1,1,2,2,1,1,1,1,1,2,2,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,2,1,1,1,1,1,1,1,1,1,2,1,1,1],[1,1,1,1,2,1,1,1,1,1,1,1,2,1,1,1,1],[1,1,1,1,1,2,2,2,2,2,2,2,1,1,1,1,1],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],[0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0],[0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0],[0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0]];
+    const SMILE_FLAT=[[0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0],[0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0],[0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],[1,1,1,1,2,2,1,1,1,1,1,2,2,1,1,1,1],[1,1,1,1,2,2,1,1,1,1,1,2,2,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,2,2,2,2,2,2,2,2,2,2,2,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],[0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0],[0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0],[0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0]];
+    const VHS_TAPE=[[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],[1,0,2,2,2,2,2,2,2,2,2,2,2,2,2,0,1],[1,0,2,0,0,0,0,0,0,0,0,0,0,0,2,0,1],[1,0,2,0,0,0,0,0,0,0,0,0,0,0,2,0,1],[1,0,2,2,2,2,2,2,2,2,2,2,2,2,2,0,1],[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],[1,1,1,0,0,0,0,0,0,0,0,0,0,0,1,1,1],[1,1,1,0,3,3,3,0,0,0,3,3,3,0,1,1,1],[1,1,1,0,3,3,3,0,0,0,3,3,3,0,1,1,1],[1,1,1,0,0,0,0,0,0,0,0,0,0,0,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]];
+    const LOGO_PHASES=[{grid:SMILE_HAPPY,dur:3000},{grid:SMILE_FLAT,dur:800},{grid:VHS_TAPE,dur:2500},{grid:SMILE_FLAT,dur:800}];
 
-async function fetchLinkInfo(url) {
-  try {
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
-      method:"POST", headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({ model:"claude-sonnet-4-6", max_tokens:200,
-        messages:[{role:"user", content:`Given this URL: "${url}", reply ONLY with raw JSON no markdown: {"title":"page title","description":"one sentence in Spanish","type":"Artículo|Vídeo|Herramienta|Tutorial|Noticia|Podcast|Música|Otro","domain":"domain.com"}`}]
-      })
-    });
-    const d = await res.json();
-    const m = (d.content?.[0]?.text||"").match(/\{[\s\S]*\}/);
-    return m ? JSON.parse(m[0]) : null;
-  } catch { return null; }
-}
+    function genId(){return"MM-"+Math.random().toString(36).slice(2,6).toUpperCase();}
 
-function exportToPDF(items, category) {
-  const list = items.filter(i=>i.category===category);
-  const se = {"Visto":"🟢","Viendo":"🔵","Pendiente":"🔴"};
-  const rows = list.map((item,idx)=>`<tr><td>${idx+1}</td><td><strong>${item.title}</strong></td><td>${item.year||item.domain||"—"}</td><td>${item.genre||"—"}</td><td>${se[item.status]||"🔴"} ${item.status||"Pendiente"}</td><td>${item.rating?"★".repeat(item.rating):"—"}</td></tr>`).join("");
-  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{font-family:Arial;background:#03060f;color:#e8f4ff;padding:40px}h1{color:#00d4ff}table{width:100%;border-collapse:collapse}th{text-align:left;padding:10px 8px;color:#00d4ff;font-size:11px;text-transform:uppercase;border-bottom:1px solid rgba(0,212,255,0.2)}td{padding:10px 8px;border-bottom:1px solid rgba(0,212,255,0.08);font-size:13px}</style></head><body><h1>MM · Menuda Movie</h1><p style="color:#6a8aaa">${category} · ${list.length} títulos · ${new Date().toLocaleDateString("es")}</p><table><thead><tr><th>#</th><th>Título</th><th>Año</th><th>Género</th><th>Estado</th><th>Val.</th></tr></thead><tbody>${rows}</tbody></table></body></html>`;
-  const w = window.open("","_blank"); if(w){w.document.write(html);w.document.close();setTimeout(()=>w.print(),800);}
-}
-
-function shareWhatsApp(items, category) {
-  const list = items.filter(i=>i.category===category);
-  const si = {"Visto":"✅","Viendo":"⏳","Pendiente":"❌"};
-  const lines = list.map((item,i)=>`${i+1}. ${si[item.status]||"❌"} *${item.title}*${item.year?` (${item.year})`:item.domain?` [${item.domain}]`:""}${item.rating?" "+"⭐".repeat(item.rating):""}`).join("\n");
-  window.open(`https://wa.me/?text=${encodeURIComponent(`🎬 *MM Menuda Movie*\nMi colección de ${category} (${list.length} títulos):\n\n${lines}\n\n_MM Menuda Movie_`)}`, "_blank");
-}
-
-function LogoBase({ size }) {
-  const [phase, setPhase] = useState(0);
-  const [glitching, setGlitching] = useState(false);
-  useEffect(() => {
-    const t = setTimeout(() => {
-      setGlitching(true);
-      setTimeout(() => { setPhase(p=>(p+1)%LOGO_PHASES.length); setGlitching(false); }, 120);
-    }, LOGO_PHASES[phase].dur);
-    return () => clearTimeout(t);
-  }, [phase]);
-  const grid = LOGO_PHASES[phase].grid;
-  return (
-    <svg width={size} height={size} viewBox="0 0 17 16" style={{imageRendering:"pixelated",filter:glitching?`drop-shadow(0 0 6px ${ACCENT}) drop-shadow(3px 0 0 rgba(255,0,100,0.8)) drop-shadow(-3px 0 0 rgba(0,255,200,0.8))`:`drop-shadow(0 0 10px ${ACCENT}88)`,transform:glitching?"translateX(3px)":"translateX(0)",transition:"filter 0.05s,transform 0.05s"}}>
-      {grid.map((row,y)=>row.map((cell,x)=>{ if(!cell) return null; return React.createElement('rect',{key:`${x}-${y}`,x,y,width:1,height:1,fill:cell===2?"#0a1628":ACCENT}); }))}
-    </svg>
-  );
-}
-
-function PixelIcon({ grid, size=20 }) {
-  return React.createElement('svg',{width:size,height:size,viewBox:`0 0 ${grid[0].length} ${grid.length}`,style:{imageRendering:"pixelated",display:"block"}},
-    grid.map((row,y)=>row.map((cell,x)=>cell?React.createElement('rect',{key:`${x}-${y}`,x,y,width:1,height:1,fill:"currentColor"}):null))
-  );
-}
-
-function HudBox({ label, children, style={}, accent=ACCENT }) {
-  return React.createElement('div',{style:{position:"relative",background:PANEL2,border:`0.5px solid ${accent}44`,borderRadius:2,...style}},
-    label && React.createElement('div',{style:{position:"absolute",top:-9,left:10,background:PANEL2,padding:"0 6px",fontSize:10,color:accent,fontFamily:"'Courier New',monospace",letterSpacing:"0.12em",fontWeight:700}},label),
-    children
-  );
-}
-
-function StarRating({ value, onChange }) {
-  return React.createElement('div',{style:{display:"flex",gap:8}},
-    [1,2,3,4,5].map(s=>React.createElement('span',{key:s,onClick:()=>onChange(s),style:{fontSize:26,color:s<=value?ACCENT:"#2a4060",cursor:"pointer",textShadow:s<=value?`0 0 10px ${ACCENT}`:"none",transition:"all 0.15s"}},s<=value?"◆":"◇"))
-  );
-}
-
-function GlitchEffect({ onDone }) {
-  const [frame, setFrame] = useState(0);
-  const slicesRef = useRef(Array.from({length:14},()=>({h:Math.random()*16+3,y:Math.random()*100,shift:(Math.random()-0.5)*50,color:Math.random()>0.6,delay:Math.floor(Math.random()*8)})));
-  useEffect(()=>{let i=0;const iv=setInterval(()=>{i++;setFrame(i);if(i>=18){clearInterval(iv);onDone();}},28);return()=>clearInterval(iv);},[]);
-  return (
-    <div style={{position:"fixed",inset:0,zIndex:500,pointerEvents:"none",overflow:"hidden"}}>
-      {slicesRef.current.map((s,i)=>frame>s.delay?<div key={i} style={{position:"absolute",left:0,right:0,top:`${s.y}%`,height:`${s.h}px`,transform:`translateX(${s.shift*(frame%2===0?1:-0.7)}px)`,background:s.color?`rgba(${frame%3===0?"0,212,255":"0,102,255"},0.2)`:`rgba(0,0,0,0.5)`,mixBlendMode:s.color?"screen":"darken"}}/>:null)}
-    </div>
-  );
-}
-
-function ItemCard({ item, onClick, idx }) {
-  const genres = item.genre ? item.genre.split(/[,\/]/).map(g=>g.trim()).filter(Boolean).slice(0,2) : [];
-  const sc = STATUS_COLOR[item.status]||STATUS_COLOR["Pendiente"];
-  return (
-    <div onClick={onClick} style={{cursor:"pointer",aspectRatio:"2/3",overflow:"hidden",position:"relative",background:`linear-gradient(160deg,${PANEL},${SURFACE2})`,outline:`1px solid rgba(0,212,255,0.12)`}}>
-      {item.poster
-        ? <img src={item.poster} alt={item.title} style={{width:"100%",height:"100%",objectFit:"cover",display:"block"}}/>
-        : <div style={{position:"absolute",inset:0,backgroundImage:`linear-gradient(${BORDER} 1px,transparent 1px),linear-gradient(90deg,${BORDER} 1px,transparent 1px)`,backgroundSize:"14px 14px",display:"flex",alignItems:"center",justifyContent:"center"}}>
-            <span style={{fontSize:24,opacity:0.12,color:ACCENT,fontFamily:"monospace"}}>{CAT_ICONS[item.category]}</span>
-          </div>
-      }
-      <div style={{position:"absolute",bottom:0,left:0,right:0,background:`linear-gradient(transparent,rgba(3,6,15,0.98))`,padding:"20px 7px 7px"}}>
-        {genres.length>0&&<div style={{display:"flex",gap:3,marginBottom:3}}>{genres.map(g=><span key={g} style={{padding:"1px 4px",fontSize:7,color:ACCENT,border:`0.5px solid ${ACCENT}44`,fontFamily:"monospace"}}>{g.toUpperCase()}</span>)}</div>}
-        <div style={{color:"#ffffff",fontSize:12,fontWeight:700,lineHeight:1.3,fontFamily:"'Courier New',monospace",textShadow:"0 1px 4px rgba(0,0,0,0.8)"}}>{item.title}</div>
-        {item.year&&<div style={{color:TEXT2,fontSize:9,fontFamily:"monospace"}}>{item.year}</div>}
-      </div>
-      <div style={{position:"absolute",top:5,left:5,width:7,height:7,background:sc,boxShadow:`0 0 6px ${sc}`}}/>
-      {item.rating>0&&<div style={{position:"absolute",top:4,right:4,fontSize:8,color:ACCENT,fontFamily:"monospace",background:`rgba(0,212,255,0.1)`,border:`0.5px solid ${ACCENT}`,padding:"1px 4px"}}>{item.rating}◆</div>}
-    </div>
-  );
-}
-
-function LinkCard({ item, onClick }) {
-  const sc = STATUS_COLOR[item.status]||STATUS_COLOR["Pendiente"];
-  return (
-    <div onClick={onClick} style={{cursor:"pointer",position:"relative",background:PANEL2,outline:`1px solid rgba(0,212,255,0.15)`,padding:"12px 14px",display:"flex",flexDirection:"column",gap:6}}>
-      <div style={{position:"absolute",inset:0,backgroundImage:`linear-gradient(${BORDER} 1px,transparent 1px),linear-gradient(90deg,${BORDER} 1px,transparent 1px)`,backgroundSize:"20px 20px",opacity:0.2,pointerEvents:"none"}}/>
-      <div style={{display:"flex",alignItems:"center",gap:8,position:"relative"}}>
-        <div style={{width:7,height:7,background:sc,boxShadow:`0 0 6px ${sc}`,flexShrink:0}}/>
-        <span style={{fontSize:10,color:ACCENT,fontFamily:"monospace"}}>{item.domain||""}</span>
-        {item.genre&&<span style={{marginLeft:"auto",padding:"1px 6px",fontSize:8,color:ACCENT,border:`0.5px solid ${ACCENT}44`,fontFamily:"monospace"}}>{item.genre.toUpperCase()}</span>}
-      </div>
-      <div style={{fontSize:13,fontWeight:700,color:"#ffffff",fontFamily:"'Courier New',monospace",lineHeight:1.4,position:"relative"}}>{item.title}</div>
-      {item.description&&<div style={{fontSize:11,color:TEXT2,fontFamily:"monospace",lineHeight:1.5,position:"relative"}}>{item.description}</div>}
-    </div>
-  );
-}
-
-function DetailPanel({ item, onClose, onDelete, onUpdate }) {
-  const [vis, setVis] = useState(false);
-  const [glitch, setGlitch] = useState(true);
-  const [rating, setRating] = useState(item.rating||0);
-  const [status, setStatus] = useState(item.status||"Pendiente");
-  const [genre, setGenre] = useState(item.genre||"");
-  const [editingGenre, setEditingGenre] = useState(false);
-  const genreRef = useRef(null);
-  useEffect(()=>{if(editingGenre)setTimeout(()=>genreRef.current&&genreRef.current.focus(),50);},[editingGenre]);
-  useEffect(()=>{const t=setTimeout(()=>setVis(true),10);return()=>clearTimeout(t);},[]);
-  function close(){setVis(false);setTimeout(onClose,1004);}
-  function save(){onUpdate({...item,rating,status,genre});close();}
-  const genres = genre ? genre.split(/[,\/]/).map(g=>g.trim()).filter(Boolean) : [];
-  const isLink = item.category==="Links";
-  return (
-    <>
-      {glitch&&<GlitchEffect onDone={()=>setGlitch(false)}/>}
-      <div onClick={close} style={{position:"fixed",inset:0,zIndex:200,background:"rgba(0,0,0,0.88)",opacity:vis?1:0,transition:"opacity 0.4s ease"}}/>
-      <div style={{position:"fixed",left:0,right:0,bottom:0,zIndex:201,height:"92vh",background:PANEL,borderRadius:"12px 12px 0 0",border:`1px solid ${BORDER2}`,borderBottom:"none",transform:vis?"translateY(0)":"translateY(100%)",transition:"transform 1.004s cubic-bezier(0.16,1,0.3,1)",display:"flex",flexDirection:"column",overflow:"hidden"}}>
-        <div style={{position:"absolute",top:0,left:"20%",right:"20%",height:"1px",background:`linear-gradient(90deg,transparent,${ACCENT},transparent)`,filter:"blur(1px)"}}/>
-        <div style={{height:"38%",flexShrink:0,position:"relative",overflow:"hidden",display:"flex",alignItems:"center",justifyContent:"center",background:`linear-gradient(160deg,#030d1f,#050a20)`}}>
-          {item.poster&&!isLink?<img src={item.poster} alt={item.title} style={{width:"100%",height:"100%",objectFit:"cover",position:"absolute",inset:0,opacity:0.6}}/>:<span style={{fontSize:130,opacity:0.06,color:ACCENT,userSelect:"none",fontFamily:"monospace"}}>{isLink?"⬢":CAT_ICONS[item.category]}</span>}
-          <div style={{position:"absolute",bottom:0,left:0,right:0,height:"65%",background:`linear-gradient(transparent,${PANEL})`}}/>
-          <button onClick={close} style={{position:"absolute",top:12,left:12,width:28,height:28,border:`1px solid ${BORDER2}`,background:"rgba(3,6,15,0.8)",color:ACCENT,cursor:"pointer",fontSize:12,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"monospace",zIndex:2}}>✕</button>
-          {(item.year||isLink&&item.domain)&&<div style={{position:"absolute",top:12,right:12,border:`1px solid ${BORDER2}`,background:"rgba(0,212,255,0.08)",color:ACCENT,fontSize:9,padding:"3px 8px",fontFamily:"monospace",zIndex:2}}>{item.year||item.domain}</div>}
-          <div style={{position:"absolute",bottom:14,left:16,right:16,zIndex:2}}>
-            <h2 style={{fontSize:18,fontWeight:800,color:"#ffffff",margin:"0 0 4px",letterSpacing:"0.06em",fontFamily:"'Courier New',monospace",textShadow:`0 0 16px rgba(0,212,255,0.5)`}}>{item.title.toUpperCase()}</h2>
-            {!isLink&&item.director&&<div style={{fontSize:11,color:TEXT2,fontFamily:"monospace"}}>DIR // {item.director}</div>}
-            {isLink&&item.url&&<div style={{fontSize:9,color:TEXT2,fontFamily:"monospace",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{item.url}</div>}
-          </div>
-        </div>
-        <div style={{flex:1,overflowY:"auto",padding:"20px 16px 0"}}>
-          {isLink&&item.url&&<button onClick={()=>window.open(item.url,"_blank")} style={{width:"100%",padding:"10px",border:`1px solid ${ACCENT}`,background:`rgba(0,212,255,0.08)`,color:ACCENT,fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"monospace",marginBottom:14}}>[ ABRIR LINK ]</button>}
-          <div style={{position:"relative",background:PANEL2,border:`0.5px solid ${ACCENT}44`,borderRadius:2,padding:"12px",marginBottom:16}}>
-            <div style={{position:"absolute",top:-9,left:10,background:PANEL2,padding:"0 6px",fontSize:10,color:ACCENT,fontFamily:"'Courier New',monospace",fontWeight:700}}>TIPO / GÉNERO</div>
-            <div style={{display:"flex",gap:6,flexWrap:"wrap",alignItems:"center",paddingTop:6}}>
-              {genres.length>0?genres.map(g=><span key={g} style={{padding:"4px 12px",border:`1px solid ${ACCENT}55`,background:`rgba(0,212,255,0.1)`,color:ACCENT,fontSize:11,fontFamily:"monospace",fontWeight:600}}>{g.toUpperCase()}</span>):<span style={{fontSize:11,color:TEXT2,fontFamily:"monospace"}}>N/A</span>}
-              <button onClick={()=>setEditingGenre(v=>!v)} style={{width:24,height:24,border:`0.5px solid ${BORDER2}`,background:"transparent",color:TEXT2,cursor:"pointer",fontSize:12}}>✏️</button>
-            </div>
-            {editingGenre&&<div style={{display:"flex",gap:8,marginTop:10}}><input ref={genreRef} value={genre} onChange={e=>setGenre(e.target.value)} onKeyDown={e=>e.key==="Enter"&&setEditingGenre(false)} style={{flex:1,padding:"8px 10px",border:`1px solid ${ACCENT}`,background:SURFACE2,color:TEXT,fontSize:13,outline:"none",fontFamily:"monospace"}}/><button onClick={()=>setEditingGenre(false)} style={{padding:"8px 14px",border:"none",background:ACCENT,color:BG,fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"monospace"}}>OK</button></div>}
-          </div>
-          {(item.plot||item.description)&&<div style={{position:"relative",background:PANEL2,border:`0.5px solid ${ACCENT}44`,borderRadius:2,padding:"12px",marginBottom:16}}>
-            <div style={{position:"absolute",top:-9,left:10,background:PANEL2,padding:"0 6px",fontSize:10,color:ACCENT,fontFamily:"'Courier New',monospace",fontWeight:700}}>DESCRIPCIÓN</div>
-            <p style={{fontSize:13,color:TEXT2,lineHeight:1.8,margin:"8px 0 0",fontFamily:"monospace"}}>{item.plot||item.description}</p>
-          </div>}
-          <div style={{position:"relative",background:PANEL2,border:`0.5px solid ${ACCENT}44`,borderRadius:2,padding:"12px",marginBottom:16}}>
-            <div style={{position:"absolute",top:-9,left:10,background:PANEL2,padding:"0 6px",fontSize:10,color:ACCENT,fontFamily:"'Courier New',monospace",fontWeight:700}}>ESTADO</div>
-            <div style={{display:"flex",gap:8,paddingTop:8}}>
-              {["Pendiente","Viendo","Visto"].map(s=>(
-                <button key={s} onClick={()=>setStatus(s)} style={{flex:1,padding:"10px 0",border:status===s?`1.5px solid ${STATUS_COLOR[s]}`:`0.5px solid rgba(255,255,255,0.15)`,background:status===s?`${STATUS_COLOR[s]}20`:"transparent",color:status===s?STATUS_COLOR[s]:"#8aaccc",fontSize:11,fontWeight:status===s?700:400,cursor:"pointer",fontFamily:"monospace",display:"flex",alignItems:"center",justifyContent:"center",gap:6,transition:"all 0.15s",boxShadow:status===s?`0 0 10px ${STATUS_COLOR[s]}44`:"none"}}>
-                  <span style={{width:8,height:8,borderRadius:1,background:STATUS_COLOR[s],boxShadow:status===s?`0 0 6px ${STATUS_COLOR[s]}`:"none"}}/>{s.toUpperCase()}
-                </button>
-              ))}
-            </div>
-          </div>
-          {!isLink&&<div style={{position:"relative",background:PANEL2,border:`0.5px solid ${ACCENT}44`,borderRadius:2,padding:"12px",marginBottom:20}}>
-            <div style={{position:"absolute",top:-9,left:10,background:PANEL2,padding:"0 6px",fontSize:10,color:ACCENT,fontFamily:"'Courier New',monospace",fontWeight:700}}>VALORACIÓN</div>
-            <div style={{paddingTop:10,display:"flex",gap:8}}>
-              {[1,2,3,4,5].map(s=><span key={s} onClick={()=>{setRating(s);onUpdate({...item,rating:s,status,genre});}} style={{fontSize:26,color:s<=rating?ACCENT:"#2a4060",cursor:"pointer",textShadow:s<=rating?`0 0 10px ${ACCENT}`:"none"}}>{s<=rating?"◆":"◇"}</span>)}
-            </div>
-          </div>}
-        </div>
-        <div style={{padding:"10px 16px 32px",display:"flex",gap:10,flexShrink:0,borderTop:`1px solid ${BORDER}`}}>
-          <button onClick={()=>{onDelete(item.id);close();}} style={{width:44,height:44,border:`1px solid rgba(255,51,102,0.4)`,background:"rgba(255,51,102,0.08)",color:"#ff3366",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>🗑</button>
-          <button onClick={save} style={{flex:1,padding:12,border:`1px solid ${ACCENT}`,background:`rgba(0,212,255,0.1)`,color:ACCENT,fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:"monospace",letterSpacing:"0.12em"}}>[ GUARDAR ]</button>
-        </div>
-      </div>
-    </>
-  );
-}
-
-function AddSheet({ tab, setTab, onAdd, loading, onClose }) {
-  const [mode, setMode] = useState(null);
-  const [title, setTitle] = useState("");
-  const [listening, setListening] = useState(false);
-  const [voiceStatus, setVoiceStatus] = useState("");
-  const inputRef = useRef(null);
-  useEffect(()=>{if(mode==="manual")setTimeout(()=>inputRef.current&&inputRef.current.focus(),100);},[mode]);
-  function parseVoice(t){const tl=t.toLowerCase();let cat=tab,tp=t;const map={"película":"Películas","pelicula":"Películas","serie":"Series","documental":"Documentales"};for(const[k,v]of Object.entries(map)){if(tl.startsWith(k+" ")){cat=v;tp=t.slice(k.length+1).trim();break;}}return{cat,title:tp};}
-  function startVoice(){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){setVoiceStatus("// VOZ NO DISPONIBLE");return;}const rec=new SR();rec.lang="es-ES";rec.onstart=()=>{setListening(true);setVoiceStatus("// ESCUCHANDO...");};rec.onresult=async(e)=>{const spoken=e.results[0][0].transcript;setListening(false);setVoiceStatus(`// "${spoken}"`);const{cat,title:t}=parseVoice(spoken);setTab(cat);await onAdd(t,cat);};rec.onerror=()=>{setListening(false);setVoiceStatus("// ERROR");};rec.onend=()=>setListening(false);rec.start();}
-  return (
-    <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.9)",zIndex:100,display:"flex",alignItems:"flex-end"}}>
-      <div onClick={e=>e.stopPropagation()} style={{width:"100%",background:PANEL,borderRadius:"12px 12px 0 0",border:`1px solid ${BORDER2}`,borderBottom:"none",padding:"16px 20px 44px",boxSizing:"border-box",position:"relative"}}>
-        <div style={{position:"absolute",top:0,left:"20%",right:"20%",height:"1px",background:`linear-gradient(90deg,transparent,${ACCENT},transparent)`}}/>
-        <div style={{width:36,height:2,background:SURFACE3,margin:"0 auto 20px"}}/>
-        {!mode?(
-          <>
-            <div style={{fontSize:10,color:TEXT2,fontFamily:"monospace",marginBottom:4}}>// NUEVO REGISTRO</div>
-            <div style={{fontSize:16,fontWeight:700,marginBottom:20,color:TEXT,fontFamily:"'Courier New',monospace"}}>AÑADIR TÍTULO</div>
-            <div style={{display:"flex",gap:12}}>
-              {[["MANUAL","✏️","Escribe el nombre",()=>setMode("manual")],["VOZ","🎙️","Di el título",()=>{setMode("voice");setTimeout(startVoice,200);}]].map(([lbl,ico,sub,fn])=>(
-                <div key={lbl} onClick={fn} style={{flex:1,padding:"18px 10px",cursor:"pointer",background:PANEL2,border:`0.5px solid ${ACCENT}44`,borderRadius:2,display:"flex",flexDirection:"column",alignItems:"center",gap:8}}>
-                  <span style={{fontSize:26}}>{ico}</span>
-                  <span style={{fontSize:13,fontWeight:700,fontFamily:"monospace",color:ACCENT}}>{lbl}</span>
-                  <span style={{fontSize:11,color:TEXT2,fontFamily:"monospace"}}>{sub}</span>
-                </div>
-              ))}
-            </div>
-          </>
-        ):mode==="manual"?(
-          <>
-            <button onClick={()=>setMode(null)} style={{background:"transparent",border:"none",color:TEXT2,cursor:"pointer",fontSize:12,marginBottom:14,padding:0,fontFamily:"monospace"}}>← VOLVER</button>
-            <div style={{display:"flex",gap:6,marginBottom:16,overflowX:"auto"}}>
-              {CATEGORIES.filter(c=>c!=="Links").map(c=><button key={c} onClick={()=>setTab(c)} style={{padding:"6px 12px",border:tab===c?`1px solid ${ACCENT}`:`0.5px solid ${BORDER}`,background:tab===c?`rgba(0,212,255,0.1)`:"transparent",color:tab===c?ACCENT:TEXT2,cursor:"pointer",fontSize:11,whiteSpace:"nowrap",fontFamily:"monospace"}}>{c.toUpperCase()}</button>)}
-            </div>
-            <input ref={inputRef} value={title} onChange={e=>setTitle(e.target.value)} onKeyDown={e=>e.key==="Enter"&&onAdd(title,tab)} placeholder="// NOMBRE DEL TÍTULO..." style={{width:"100%",padding:"13px 14px",border:`1px solid ${BORDER2}`,background:SURFACE2,color:TEXT,fontSize:14,boxSizing:"border-box",marginBottom:10,outline:"none",fontFamily:"monospace"}}/>
-            <button onClick={()=>onAdd(title,tab)} disabled={loading||!title.trim()} style={{width:"100%",padding:13,border:`1px solid ${title.trim()?ACCENT:BORDER}`,background:title.trim()?`rgba(0,212,255,0.1)`:"transparent",color:title.trim()?ACCENT:TEXT3,fontSize:13,fontWeight:700,cursor:title.trim()?"pointer":"default",fontFamily:"monospace",letterSpacing:"0.1em"}}>
-              {loading?"// BUSCANDO PORTADA...":"[ AÑADIR ]"}
-            </button>
-          </>
-        ):(
-          <>
-            <button onClick={()=>{setMode(null);setVoiceStatus("");}} style={{background:"transparent",border:"none",color:TEXT2,cursor:"pointer",fontSize:12,marginBottom:20,padding:0,fontFamily:"monospace"}}>← VOLVER</button>
-            <div style={{display:"flex",flexDirection:"column",alignItems:"center",padding:"12px 0"}}>
-              <div style={{width:72,height:72,display:"flex",alignItems:"center",justifyContent:"center",marginBottom:16,background:PANEL2,border:`0.5px solid ${listening?ACCENT:BORDER}44`,boxShadow:listening?`0 0 20px rgba(0,212,255,0.3)`:"none"}}>
-                <svg width="28" height="28" viewBox="0 0 24 24" fill={listening?ACCENT:TEXT3}><path d="M12 1a4 4 0 0 1 4 4v6a4 4 0 0 1-8 0V5a4 4 0 0 1 4-4zm0 2a2 2 0 0 0-2 2v6a2 2 0 0 0 4 0V5a2 2 0 0 0-2-2zm-1 15.93A8 8 0 0 1 4.07 13H6.1a6 6 0 0 0 11.8 0h2.03A8 8 0 0 1 13 18.93V21h2v2H9v-2h2v-2.07z"/></svg>
-              </div>
-              <div style={{fontSize:13,fontWeight:600,marginBottom:6,color:listening?ACCENT:TEXT,fontFamily:"monospace"}}>{listening?"// ESCUCHANDO...":"// EN ESPERA"}</div>
-              <div style={{fontSize:11,color:TEXT2,textAlign:"center",marginBottom:20,fontFamily:"monospace"}}>{voiceStatus||'// DI "PELÍCULA MATRIX"'}</div>
-              {!listening&&<button onClick={startVoice} style={{padding:"10px 24px",border:`1px solid ${ACCENT}`,background:`rgba(0,212,255,0.1)`,color:ACCENT,fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"monospace",letterSpacing:"0.1em"}}>[ REINTENTAR ]</button>}
-            </div>
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function AddLinkSheet({ onAdd, loading, onClose }) {
-  const [url, setUrl] = useState("");
-  const [tag, setTag] = useState("Otro");
-  const inputRef = useRef(null);
-  useEffect(()=>{ setTimeout(()=>inputRef.current&&inputRef.current.focus(),100); },[]);
-  const tags = ["Artículo","Vídeo","Herramienta","Tutorial","Noticia","Podcast","Música","Otro"];
-  return (
-    <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.9)",zIndex:100,display:"flex",alignItems:"flex-end"}}>
-      <div onClick={e=>e.stopPropagation()} style={{width:"100%",background:PANEL,borderRadius:"12px 12px 0 0",border:`1px solid ${BORDER2}`,borderBottom:"none",padding:"16px 20px 44px",boxSizing:"border-box",position:"relative"}}>
-        <div style={{position:"absolute",top:0,left:"20%",right:"20%",height:"1px",background:`linear-gradient(90deg,transparent,${ACCENT},transparent)`}}/>
-        <div style={{width:36,height:2,background:SURFACE3,margin:"0 auto 20px"}}/>
-        <div style={{fontSize:10,color:TEXT2,fontFamily:"monospace",marginBottom:4}}>// NUEVO LINK</div>
-        <div style={{fontSize:16,fontWeight:700,marginBottom:16,color:TEXT,fontFamily:"'Courier New',monospace"}}>AÑADIR URL</div>
-        <input ref={inputRef} value={url} onChange={e=>setUrl(e.target.value)} onKeyDown={e=>e.key==="Enter"&&onAdd(url,"Links",tag)} placeholder="https://..." style={{width:"100%",padding:"13px 14px",border:`1px solid ${BORDER2}`,background:SURFACE2,color:TEXT,fontSize:14,boxSizing:"border-box",marginBottom:12,outline:"none",fontFamily:"monospace"}}/>
-        <div style={{fontSize:10,color:TEXT2,fontFamily:"monospace",marginBottom:8}}>// TIPO</div>
-        <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:14}}>
-          {tags.map(t=><button key={t} onClick={()=>setTag(t)} style={{padding:"6px 12px",border:tag===t?`1px solid ${ACCENT}`:`0.5px solid ${BORDER}`,background:tag===t?`rgba(0,212,255,0.1)`:"transparent",color:tag===t?ACCENT:TEXT2,cursor:"pointer",fontSize:11,fontFamily:"monospace"}}>{t.toUpperCase()}</button>)}
-        </div>
-        <button onClick={()=>onAdd(url,"Links",tag)} disabled={loading||!url.trim()} style={{width:"100%",padding:13,border:`1px solid ${url.trim()?ACCENT:BORDER}`,background:url.trim()?`rgba(0,212,255,0.1)`:"transparent",color:url.trim()?ACCENT:TEXT3,fontSize:13,fontWeight:700,cursor:url.trim()?"pointer":"default",fontFamily:"monospace",letterSpacing:"0.1em"}}>
-          {loading?"// ANALIZANDO URL...":"[ GUARDAR LINK ]"}
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function App() {
-  const [items, setItems] = useState([]);
-  const [tab, setTab] = useState("Películas");
-  const [loading, setLoading] = useState(false);
-  const [toast, setToast] = useState("");
-  const [showAdd, setShowAdd] = useState(false);
-  const [showAddLink, setShowAddLink] = useState(false);
-  const [showShare, setShowShare] = useState(false);
-  const [showGenre, setShowGenre] = useState(false);
-  const [activeGenre, setActiveGenre] = useState("Todas");
-  const [selected, setSelected] = useState(null);
-  const [glitches, setGlitches] = useState([]);
-  const [fingerprints, setFingerprints] = useState([]);
-  const clickCountRef = useRef(0);
-  const clickTimerRef = useRef(null);
-  const shakeRef = useRef({ lastX: null, lastY: null, lastT: null });
-
-  function triggerGlitch(intensity=1, originY=null) {
-    const id = Date.now() + Math.random();
-    const count = Math.min(Math.ceil(intensity), 6);
-    const pct = originY !== null ? (originY / window.innerHeight) * 100 : 50;
-    const newGlitches = Array.from({length:count}, (_,i) => ({
-      id: id + i,
-      h: Math.random()*18+2,
-      y: Math.max(0, Math.min(95, pct + (Math.random()-0.5)*25)),
-      shift: (Math.random()-0.5) * 55 * intensity,
-      color: Math.random()>0.5,
-    }));
-    setGlitches(g => [...g, ...newGlitches]);
-    setTimeout(() => setGlitches(g => g.filter(x => !newGlitches.find(n => n.id === x.id))), 180 + intensity * 60);
-  }
-
-  function handleEmptyClick(e) {
-    const x = e.clientX, y = e.clientY;
-    const id = Date.now() + Math.random();
-    setFingerprints(f => [...f, { id, x, y }]);
-    setTimeout(() => setFingerprints(f => f.filter(p => p.id !== id)), 1800);
-    clickCountRef.current += 1;
-    clearTimeout(clickTimerRef.current);
-    triggerGlitch(clickCountRef.current, y);
-    clickTimerRef.current = setTimeout(() => { clickCountRef.current = 0; }, 1200);
-  }
-
-  useEffect(() => {
-    function handleMotion(e) {
-      const acc = e.accelerationIncludingGravity;
-      if (!acc) return;
-      const now = Date.now();
-      const s = shakeRef.current;
-      if (s.lastX === null) { s.lastX = acc.x; s.lastY = acc.y; s.lastT = now; return; }
-      const dt = (now - s.lastT) / 1000;
-      if (dt < 0.05) return;
-      const force = (Math.abs((acc.x||0)-s.lastX) + Math.abs((acc.y||0)-s.lastY)) / dt;
-      s.lastX = acc.x; s.lastY = acc.y; s.lastT = now;
-      if (force > 80) triggerGlitch(Math.min(force/40, 5));
-    }
-    window.addEventListener("devicemotion", handleMotion);
-    return () => window.removeEventListener("devicemotion", handleMotion);
-  }, []);
-
-  useEffect(()=>{try{const v=localStorage.getItem("media-items");if(v)setItems(JSON.parse(v));}catch{}},[]);
-  function save(list){setItems(list);try{localStorage.setItem("media-items",JSON.stringify(list));}catch{}}
-
-  async function addItem(rawTitle,cat){
-    if(!rawTitle.trim())return;
-    setLoading(true);setToast("// BUSCANDO PORTADA...");
-    const info=await fetchInfo(rawTitle.trim());
-    save([{id:Date.now(),title:rawTitle.trim(),category:cat,year:info?.year||null,plot:info?.plot||null,genre:info?.genre||null,director:null,poster:info?.poster||null,rating:0,status:"Pendiente",addedAt:Date.now()},...items]);
-    setShowAdd(false);setLoading(false);
-    setToast(info?.poster?"// PORTADA ENCONTRADA ✓":"// REGISTRADO");
-    setTimeout(()=>setToast(""),2500);
-  }
-
-  async function addLink(url,cat,tag){
-    if(!url.trim())return;
-    setLoading(true);setToast("// ANALIZANDO URL...");
-    const info=await fetchLinkInfo(url.trim());
-    let domain="";try{domain=new URL(url.trim()).hostname.replace("www.","");}catch{}
-    save([{id:Date.now(),title:info?.title||url,description:info?.description||null,url:url.trim(),domain:info?.domain||domain,category:cat,genre:tag||info?.type||"Otro",poster:null,rating:0,status:"Pendiente",addedAt:Date.now()},...items]);
-    setShowAddLink(false);setLoading(false);
-    setToast("// LINK GUARDADO ✓");
-    setTimeout(()=>setToast(""),2000);
-  }
-
-  const matchesGenre=(ig,f)=>{if(f==="Todas"||f==="Todos")return true;if(!ig)return false;const n=s=>s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[-\s]/g,"");const ff=n(f);return ig.split(/[,\/]/).map(g=>n(g.trim())).some(g=>g.includes(ff)||ff.includes(g));};
-  const filtered=items.filter(i=>i.category===tab&&matchesGenre(i.genre,activeGenre));
-  const stats={visto:filtered.filter(i=>i.status==="Visto").length,viendo:filtered.filter(i=>i.status==="Viendo").length,pendiente:filtered.filter(i=>i.status==="Pendiente"||!i.status).length};
-
-  return (
-    <div style={{maxWidth:390,margin:"0 auto",minHeight:"100vh",background:BG,display:"flex",flexDirection:"column",fontFamily:"system-ui,sans-serif",color:TEXT,position:"relative"}}>
-      <div className="dot-bg"/>
-      <div className="vhs-noise"/>
-
-      {/* Fingerprints */}
-      {fingerprints.map(p=>(
-        <div key={p.id} className="fingerprint" style={{left:p.x-30,top:p.y-30,width:60,height:60}}>
-          <svg viewBox="0 0 60 60" width="60" height="60">
-            <ellipse cx="30" cy="30" rx="8" ry="8" fill="none" stroke={ACCENT} strokeWidth="1.2"/>
-            <ellipse cx="30" cy="30" rx="13" ry="12" fill="none" stroke={ACCENT} strokeWidth="1"/>
-            <ellipse cx="30" cy="30" rx="18" ry="17" fill="none" stroke={ACCENT} strokeWidth="0.9"/>
-            <ellipse cx="30" cy="30" rx="23" ry="21" fill="none" stroke={ACCENT} strokeWidth="0.8"/>
-            <ellipse cx="30" cy="30" rx="27" ry="25" fill="none" stroke={ACCENT} strokeWidth="0.7"/>
-            <line x1="30" y1="22" x2="30" y2="5" stroke={ACCENT} strokeWidth="0.8"/>
-            <line x1="30" y1="38" x2="30" y2="55" stroke={ACCENT} strokeWidth="0.8"/>
-          </svg>
-        </div>
-      ))}
-
-      {/* Ambient glitches */}
-      {glitches.map(g=>(
-        <div key={g.id} style={{position:"fixed",left:0,right:0,top:`${g.y}%`,height:`${g.h}px`,zIndex:9998,pointerEvents:"none",transform:`translateX(${g.shift}px)`,background:g.color?`rgba(0,212,255,0.22)`:`rgba(0,0,0,0.6)`,mixBlendMode:g.color?"screen":"darken"}}/>
-      ))}
-
-      {toast&&<div style={{position:"fixed",top:16,left:"50%",transform:"translateX(-50%)",background:`rgba(0,212,255,0.1)`,border:`1px solid ${ACCENT}`,color:ACCENT,padding:"8px 16px",fontSize:12,fontWeight:600,zIndex:400,whiteSpace:"nowrap",fontFamily:"monospace"}}>{toast}</div>}
-
-      <div style={{padding:"10px 12px",zIndex:10,position:"relative"}}>
-        <div style={{position:"relative",background:PANEL2,border:`0.5px solid ${ACCENT}44`,borderRadius:2,padding:"12px 14px"}}>
-          <div style={{display:"flex",alignItems:"center",gap:10}}>
-            <LogoBase size={24}/>
-            <h1 style={{fontSize:13,fontWeight:800,margin:0,fontFamily:"'Courier New',monospace",letterSpacing:"0.18em"}}>
-              <span style={{color:TEXT}}>MENUDA</span>
-              <span style={{color:ACCENT,textShadow:`0 0 14px ${ACCENT}`,marginLeft:3}}>MOVIE</span>
-            </h1>
-          </div>
-        </div>
-      </div>
-
-      <div style={{padding:"14px 12px 8px",zIndex:10,position:"relative"}}>
-        <div style={{position:"relative",background:PANEL2,border:`0.5px solid ${ACCENT}44`,borderRadius:2,padding:"8px 12px"}}>
-          <div style={{position:"absolute",top:-9,left:10,background:PANEL2,padding:"0 6px",fontSize:10,color:ACCENT,fontFamily:"'Courier New',monospace",fontWeight:700}}>STATUS</div>
-          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",paddingTop:4}}>
-            <div style={{display:"flex",gap:14}}>
-              {[["VISTO","#00ff88"],["VIENDO",ACCENT],["PENDIENTE","#ff3366"]].map(([s,c])=>(
-                <div key={s} style={{display:"flex",alignItems:"center",gap:5}}>
-                  <div style={{width:7,height:7,background:c,boxShadow:`0 0 5px ${c}`}}/>
-                  <span style={{fontSize:10,color:TEXT2,fontFamily:"monospace"}}>{s} <span style={{color:"#ffffff",fontWeight:700}}>{stats[s.toLowerCase()]}</span></span>
-                </div>
-              ))}
-            </div>
-            <div style={{display:"flex",gap:6}}>
-              <button onClick={()=>setShowGenre(true)} style={{width:28,height:28,border:`1px solid ${activeGenre!=="Todas"&&activeGenre!=="Todos"?ACCENT:BORDER}`,background:activeGenre!=="Todas"&&activeGenre!=="Todos"?`rgba(0,212,255,0.1)`:"transparent",color:activeGenre!=="Todas"&&activeGenre!=="Todos"?ACCENT:TEXT2,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M4 6h16v2H4zm2 5h12v2H6zm3 5h6v2H9z"/></svg>
-              </button>
-              <button onClick={()=>setShowShare(true)} style={{width:28,height:28,border:`1px solid ${BORDER}`,background:"transparent",color:TEXT2,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/></svg>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div style={{flex:1,padding:"0 12px 110px",position:"relative",zIndex:10}} onClick={filtered.length===0?handleEmptyClick:undefined}>
-        {filtered.length===0
-          ?<div style={{position:"relative",background:PANEL2,border:`0.5px solid ${TEXT3}44`,borderRadius:2,padding:"48px 20px",textAlign:"center",marginTop:8}}>
-            <div style={{fontSize:36,marginBottom:12,opacity:0.1,color:ACCENT}}>{CAT_ICONS[tab]}</div>
-            <div style={{fontSize:12,color:TEXT2,fontFamily:"monospace"}}>// SIN REGISTROS</div>
-            <div style={{fontSize:11,color:TEXT3,marginTop:4,fontFamily:"monospace"}}>PULSA + PARA AÑADIR</div>
-          </div>
-          :<div style={{display:"grid",gridTemplateColumns:tab==="Links"?"1fr":"repeat(3,1fr)",gap:8,paddingTop:2}}>
-            {filtered.map((item,i)=>tab==="Links"
-              ?<LinkCard key={item.id} item={item} idx={i} onClick={()=>setSelected(item)}/>
-              :<ItemCard key={item.id} item={item} idx={i} onClick={()=>setSelected(item)}/>
-            )}
-          </div>
+    // Social stub — reemplaza con tu backend real
+    async function publishProfile(profile,items){
+      try{
+        if(window.storage){
+          await window.storage.set(`user:${profile.id}`,JSON.stringify({profile:{name:profile.name,bio:profile.bio,photo:profile.photo,id:profile.id},items}),true);
         }
-      </div>
+      }catch(e){console.warn("storage no disponible en local",e);}
+    }
+    async function fetchUserById(id){
+      try{
+        if(window.storage){
+          const res=await window.storage.get(`user:${id.toUpperCase()}`,true);
+          if(!res)return null;
+          return JSON.parse(res.value);
+        }
+      }catch{}
+      return null;
+    }
 
-      <div style={{position:"fixed",bottom:80,left:"50%",transform:"translateX(-50%)",zIndex:50}}>
-        <button onClick={()=>tab==="Links"?setShowAddLink(true):setShowAdd(true)} className="fab-btn" style={{width:64,height:64,background:`rgba(0,212,255,0.1)`,border:`1px solid ${ACCENT}`,color:ACCENT,fontSize:tab==="Links"?22:32,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"monospace"}}>
-          {tab==="Links"?"⬢":"+"}
-        </button>
-      </div>
+    async function fetchInfo(title){
+      try{
+        const r=await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${TMDB_KEY}&query=${encodeURIComponent(title)}&language=es-ES`);
+        const d=await r.json();
+        const result=d.results?.[0];
+        if(!result)return null;
+        const poster=result.poster_path?`https://image.tmdb.org/t/p/w500${result.poster_path}`:null;
+        const year=(result.release_date||result.first_air_date||"").slice(0,4);
+        const plot=result.overview||"";
+        const genreMap={28:"Acción",12:"Aventura",16:"Animación",35:"Comedia",80:"Crimen",99:"Documental",18:"Drama",14:"Fantasía",36:"Histórica",27:"Terror",9648:"Misterio",10749:"Romance",878:"Ciencia ficción",53:"Thriller",10752:"Bélica",37:"Western"};
+        const genre=(result.genre_ids||[]).slice(0,3).map(id=>genreMap[id]).filter(Boolean).join(", ");
+        return{poster,year,plot,genre};
+      }catch{return null;}
+    }
 
-      <div style={{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:390,zIndex:10,padding:"6px 12px 14px",boxSizing:"border-box",background:"rgba(3,6,15,0.95)",backdropFilter:"blur(10px)",borderTop:`1px solid ${BORDER}`}}>
-        <div style={{display:"flex",gap:6}}>
-          {CATEGORIES.map(c=>(
-            <button key={c} onClick={()=>{setTab(c);setActiveGenre("Todas");}} className="nav-btn" style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:3,border:tab===c?`1px solid ${ACCENT}44`:`1px solid transparent`,background:tab===c?`rgba(0,212,255,0.06)`:"transparent",color:tab===c?ACCENT:TEXT3,cursor:"pointer",padding:"6px 0",position:"relative",transition:"all 0.2s",borderRadius:2}}>
-              {tab===c&&<div style={{position:"absolute",top:0,left:"10%",right:"10%",height:"1px",background:ACCENT,boxShadow:`0 0 4px ${ACCENT}`}}/>}
-              <PixelIcon grid={PIXEL_GRIDS[c]} size={18}/>
-              <span style={{fontSize:7,fontWeight:tab===c?700:400,fontFamily:"monospace",letterSpacing:"0.04em"}}>{c==="Películas"?"PELIS":c==="Documentales"?"DOCS":c.toUpperCase()}</span>
-            </button>
-          ))}
+    async function fetchLinkInfo(url){
+      try{
+        const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:200,messages:[{role:"user",content:`Given this URL: "${url}", reply ONLY with raw JSON no markdown: {"title":"page title","description":"one sentence in Spanish","type":"Artículo|Vídeo|Herramienta|Tutorial|Noticia|Podcast|Música|Otro","domain":"domain.com"}`}]})});
+        const d=await res.json();
+        const m=(d.content?.[0]?.text||"").match(/\{[\s\S]*\}/);
+        return m?JSON.parse(m[0]):null;
+      }catch{return null;}
+    }
+
+    function exportToPDF(items,category){
+      const list=items.filter(i=>i.category===category);
+      const se={"Visto":"🟢","Viendo":"🔵","Pendiente":"🔴"};
+      const rows=list.map((item,idx)=>`<tr><td>${idx+1}</td><td><strong>${item.title}</strong></td><td>${item.year||item.domain||"—"}</td><td>${item.genre||"—"}</td><td>${se[item.status]||"🔴"} ${item.status||"Pendiente"}</td><td>${item.rating?"★".repeat(item.rating):"—"}</td></tr>`).join("");
+      const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{font-family:Arial;background:#03060f;color:#e8f4ff;padding:40px}h1{color:#00d4ff}table{width:100%;border-collapse:collapse}th{text-align:left;padding:10px 8px;color:#00d4ff;font-size:11px;text-transform:uppercase;border-bottom:1px solid rgba(0,212,255,0.2)}td{padding:10px 8px;border-bottom:1px solid rgba(0,212,255,0.08);font-size:13px}</style></head><body><h1>MM · Menuda Movie</h1><p style="color:#6a8aaa">${category} · ${list.length} títulos · ${new Date().toLocaleDateString("es")}</p><table><thead><tr><th>#</th><th>Título</th><th>Año</th><th>Género</th><th>Estado</th><th>Val.</th></tr></thead><tbody>${rows}</tbody></table></body></html>`;
+      const w=window.open("","_blank");if(w){w.document.write(html);w.document.close();setTimeout(()=>w.print(),800);}
+    }
+
+    function shareWhatsApp(items,category){
+      const list=items.filter(i=>i.category===category);
+      const si={"Visto":"✅","Viendo":"⏳","Pendiente":"❌"};
+      const lines=list.map((item,i)=>`${i+1}. ${si[item.status]||"❌"} *${item.title}*${item.year?` (${item.year})`:item.domain?` [${item.domain}]`:""}${item.rating?" "+"⭐".repeat(item.rating):""}`).join("\n");
+      window.open(`https://wa.me/?text=${encodeURIComponent(`🎬 *MM Menuda Movie*\nMi colección de ${category} (${list.length} títulos):\n\n${lines}\n\n_MM Menuda Movie_`)}`, "_blank");
+    }
+
+    // ── COMPONENTS ──────────────────────────────────────────────────────────
+
+    function LogoBase({size,A}){
+      const [phase,setPhase]=useState(0);
+      const [glitching,setGlitching]=useState(false);
+      useEffect(()=>{
+        const t=setTimeout(()=>{setGlitching(true);setTimeout(()=>{setPhase(p=>(p+1)%LOGO_PHASES.length);setGlitching(false);},120);},LOGO_PHASES[phase].dur);
+        return()=>clearTimeout(t);
+      },[phase]);
+      const grid=LOGO_PHASES[phase].grid;
+      return(
+        <svg width={size} height={size} viewBox="0 0 17 16" style={{imageRendering:"pixelated",filter:glitching?`drop-shadow(0 0 6px ${A}) drop-shadow(3px 0 0 rgba(255,0,100,0.8)) drop-shadow(-3px 0 0 rgba(0,255,200,0.8))`:`drop-shadow(0 0 10px ${A}88)`,transform:glitching?"translateX(3px)":"translateX(0)",transition:"filter 0.05s,transform 0.05s"}}>
+          {grid.map((row,y)=>row.map((cell,x)=>{if(!cell)return null;return <rect key={`${x}-${y}`} x={x} y={y} width={1} height={1} fill={cell===2?"#0a1628":A}/>;}))}
+        </svg>
+      );
+    }
+
+    function PixelIcon({grid,size=20}){
+      return(
+        <svg width={size} height={size} viewBox={`0 0 ${grid[0].length} ${grid.length}`} style={{imageRendering:"pixelated",display:"block"}}>
+          {grid.map((row,y)=>row.map((cell,x)=>cell?<rect key={`${x}-${y}`} x={x} y={y} width={1} height={1} fill="currentColor"/>:null))}
+        </svg>
+      );
+    }
+
+    function GlitchEffect({onDone}){
+      const [frame,setFrame]=useState(0);
+      const slicesRef=useRef(Array.from({length:14},()=>({h:Math.random()*16+3,y:Math.random()*100,shift:(Math.random()-0.5)*50,color:Math.random()>0.6,delay:Math.floor(Math.random()*8)})));
+      useEffect(()=>{let i=0;const iv=setInterval(()=>{i++;setFrame(i);if(i>=18){clearInterval(iv);onDone();}},28);return()=>clearInterval(iv);},[]);
+      return(
+        <div style={{position:"fixed",inset:0,zIndex:500,pointerEvents:"none",overflow:"hidden"}}>
+          {slicesRef.current.map((s,i)=>frame>s.delay?<div key={i} style={{position:"absolute",left:0,right:0,top:`${s.y}%`,height:`${s.h}px`,transform:`translateX(${s.shift*(frame%2===0?1:-0.7)}px)`,background:s.color?"rgba(0,212,255,0.2)":"rgba(0,0,0,0.5)",mixBlendMode:s.color?"screen":"darken"}}/>:null)}
         </div>
-      </div>
+      );
+    }
 
-      {showGenre&&<div onClick={()=>setShowGenre(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.9)",zIndex:100,display:"flex",alignItems:"flex-end"}}>
-        <div onClick={e=>e.stopPropagation()} style={{width:"100%",background:PANEL,borderRadius:"12px 12px 0 0",border:`1px solid ${BORDER2}`,borderBottom:"none",padding:"16px 16px 44px",boxSizing:"border-box"}}>
-          <div style={{width:36,height:2,background:SURFACE3,margin:"0 auto 16px"}}/>
-          <div style={{fontSize:10,color:TEXT2,fontFamily:"monospace",marginBottom:14}}>// FILTRAR</div>
-          <div style={{display:"flex",flexWrap:"wrap",gap:7}}>
-            {GENRES[tab].map(g=><button key={g} onClick={()=>{setActiveGenre(g);setShowGenre(false);}} style={{padding:"7px 12px",border:activeGenre===g?`1px solid ${ACCENT}`:`0.5px solid ${BORDER}`,background:activeGenre===g?`rgba(0,212,255,0.1)`:"transparent",color:activeGenre===g?ACCENT:TEXT2,cursor:"pointer",fontSize:11,fontFamily:"monospace"}}>{g.toUpperCase()}</button>)}
+    function ItemCard({item,onClick,idx,A}){
+      const genres=item.genre?item.genre.split(/[,\/]/).map(g=>g.trim()).filter(Boolean).slice(0,2):[];
+      const sc=STATUS_COLOR[item.status]||STATUS_COLOR["Pendiente"];
+      const [tilt,setTilt]=useState({x:0,y:0,shine:50});
+      const cardRef=useRef(null);
+      function handleMove(e){const card=cardRef.current;if(!card)return;const rect=card.getBoundingClientRect();const cx=e.touches?e.touches[0].clientX:e.clientX;const cy=e.touches?e.touches[0].clientY:e.clientY;const x=(cx-rect.left)/rect.width,y=(cy-rect.top)/rect.height;setTilt({x:(y-0.5)*24,y:(x-0.5)*-24,shine:x*100});}
+      function handleLeave(){setTilt({x:0,y:0,shine:50});}
+      return(
+        <div ref={cardRef} onMouseMove={handleMove} onMouseLeave={handleLeave} onTouchMove={handleMove} onTouchEnd={handleLeave} onClick={onClick} className="card-item"
+          style={{animationDelay:`${idx*0.06}s`,cursor:"pointer",aspectRatio:"2/3",position:"relative",transform:`rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) scale(${tilt.x||tilt.y?1.04:1})`,transition:tilt.x||tilt.y?"transform 0.05s":"transform 0.4s ease",transformStyle:"preserve-3d",perspective:"600px"}}>
+          <div style={{position:"absolute",inset:0,overflow:"hidden",background:`linear-gradient(160deg,${PANEL},${SURFACE2})`,outline:`1px solid ${A}22`,borderRadius:2}}>
+            <div style={{position:"absolute",inset:0,zIndex:3,pointerEvents:"none",background:`radial-gradient(circle at ${tilt.shine}% ${50+tilt.x}%, rgba(255,255,255,0.1) 0%, transparent 60%)`,transition:"background 0.05s"}}/>
+            {item.poster?<img src={item.poster} alt={item.title} style={{width:"100%",height:"100%",objectFit:"cover",display:"block"}}/>:<div style={{position:"absolute",inset:0,backgroundImage:`linear-gradient(${BORDER} 1px,transparent 1px),linear-gradient(90deg,${BORDER} 1px,transparent 1px)`,backgroundSize:"14px 14px",display:"flex",alignItems:"center",justifyContent:"center"}}><span style={{fontSize:24,opacity:0.12,color:A,fontFamily:"monospace"}}>{CAT_ICONS[item.category]}</span></div>}
+            <div style={{position:"absolute",bottom:0,left:0,right:0,background:"linear-gradient(transparent,rgba(3,6,15,0.98))",padding:"20px 7px 7px",zIndex:2}}>
+              {genres.length>0&&<div style={{display:"flex",gap:3,marginBottom:3}}>{genres.map(g=><span key={g} style={{padding:"1px 4px",fontSize:7,color:A,border:`0.5px solid ${A}44`,fontFamily:"monospace"}}>{g.toUpperCase()}</span>)}</div>}
+              <div style={{color:"#fff",fontSize:12,fontWeight:700,lineHeight:1.3,fontFamily:"'Courier New',monospace",textShadow:"0 1px 4px rgba(0,0,0,0.8)"}}>{item.title}</div>
+              {item.year&&<div style={{color:TEXT2,fontSize:9,fontFamily:"monospace"}}>{item.year}</div>}
+            </div>
+            <div style={{position:"absolute",top:5,left:5,width:7,height:7,background:sc,boxShadow:`0 0 6px ${sc}`,zIndex:2}}/>
+            {item.rating>0&&<div style={{position:"absolute",top:4,right:4,fontSize:8,color:A,fontFamily:"monospace",background:`${A}18`,border:`0.5px solid ${A}`,padding:"1px 4px",zIndex:2}}>{item.rating}◆</div>}
           </div>
         </div>
-      </div>}
+      );
+    }
 
-      {showShare&&<div onClick={()=>setShowShare(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.9)",zIndex:100,display:"flex",alignItems:"flex-end"}}>
-        <div onClick={e=>e.stopPropagation()} style={{width:"100%",background:PANEL,borderRadius:"12px 12px 0 0",border:`1px solid ${BORDER2}`,borderBottom:"none",padding:"16px 16px 40px",boxSizing:"border-box"}}>
-          <div style={{width:36,height:2,background:SURFACE3,margin:"0 auto 16px"}}/>
-          <div style={{fontSize:15,fontWeight:700,marginBottom:16,fontFamily:"monospace",color:TEXT}}>{tab.toUpperCase()} — {filtered.length} REG.</div>
-          <button onClick={()=>{exportToPDF(items,tab);setShowShare(false);}} style={{width:"100%",padding:13,border:`1px solid ${BORDER2}`,background:SURFACE2,color:TEXT,fontSize:13,cursor:"pointer",marginBottom:8,fontFamily:"monospace"}}>[ EXPORTAR PDF ]</button>
-          <button onClick={()=>{shareWhatsApp(items,tab);setShowShare(false);}} style={{width:"100%",padding:13,border:`1px solid ${BORDER2}`,background:SURFACE2,color:TEXT,fontSize:13,cursor:"pointer",fontFamily:"monospace"}}>[ WHATSAPP ]</button>
+    function LinkCard({item,onClick,A}){
+      const sc=STATUS_COLOR[item.status]||STATUS_COLOR["Pendiente"];
+      return(
+        <div onClick={onClick} className="card-item" style={{cursor:"pointer",position:"relative",background:PANEL2,outline:`1px solid ${A}18`,padding:"12px 14px",display:"flex",flexDirection:"column",gap:6}}>
+          <div style={{position:"absolute",inset:0,backgroundImage:`linear-gradient(${BORDER} 1px,transparent 1px),linear-gradient(90deg,${BORDER} 1px,transparent 1px)`,backgroundSize:"20px 20px",opacity:0.2,pointerEvents:"none"}}/>
+          <div style={{display:"flex",alignItems:"center",gap:8,position:"relative"}}><div style={{width:7,height:7,background:sc,boxShadow:`0 0 6px ${sc}`,flexShrink:0}}/><span style={{fontSize:10,color:A,fontFamily:"monospace"}}>{item.domain||""}</span>{item.genre&&<span style={{marginLeft:"auto",padding:"1px 6px",fontSize:8,color:A,border:`0.5px solid ${A}44`,fontFamily:"monospace"}}>{item.genre.toUpperCase()}</span>}</div>
+          <div style={{fontSize:13,fontWeight:700,color:"#fff",fontFamily:"'Courier New',monospace",lineHeight:1.4,position:"relative"}}>{item.title}</div>
+          {item.description&&<div style={{fontSize:11,color:TEXT2,fontFamily:"monospace",lineHeight:1.5,position:"relative"}}>{item.description}</div>}
         </div>
-      </div>}
+      );
+    }
 
-      {showAdd&&<AddSheet tab={tab} setTab={setTab} onAdd={addItem} loading={loading} onClose={()=>setShowAdd(false)}/>}
-      {showAddLink&&<AddLinkSheet onAdd={addLink} loading={loading} onClose={()=>setShowAddLink(false)}/>}
-      {selected&&<DetailPanel item={selected} onClose={()=>setSelected(null)} onDelete={id=>save(items.filter(i=>i.id!==id))} onUpdate={updated=>save(items.map(i=>i.id===updated.id?updated:i))}/>}
-    </div>
-  );
-}
+    function DetailPanel({item,onClose,onDelete,onUpdate,A,readOnly=false,onClone}){
+      const [vis,setVis]=useState(false);
+      const [glitch,setGlitch]=useState(true);
+      const [rating,setRating]=useState(item.rating||0);
+      const [status,setStatus]=useState(item.status||"Pendiente");
+      const [genre,setGenre]=useState(item.genre||"");
+      const [notes,setNotes]=useState(item.notes||"");
+      const [editingGenre,setEditingGenre]=useState(false);
+      const [editingNotes,setEditingNotes]=useState(false);
+      const genreRef=useRef(null);const notesRef=useRef(null);
+      useEffect(()=>{if(editingGenre)setTimeout(()=>genreRef.current?.focus(),50);},[editingGenre]);
+      useEffect(()=>{if(editingNotes)setTimeout(()=>notesRef.current?.focus(),50);},[editingNotes]);
+      useEffect(()=>{const t=setTimeout(()=>setVis(true),10);return()=>clearTimeout(t);},[]);
+      function close(){setVis(false);setTimeout(onClose,1004);}
+      function save(){onUpdate({...item,rating,status,genre,notes});close();}
+      const genres=genre?genre.split(/[,\/]/).map(g=>g.trim()).filter(Boolean):[];
+      const isLink=item.category==="Links";
+      const HB=({label,children,mb=16})=>(<div style={{position:"relative",background:PANEL2,border:`0.5px solid ${A}44`,borderRadius:2,padding:"12px",marginBottom:mb}}>{label&&<div style={{position:"absolute",top:-9,left:10,background:PANEL2,padding:"0 6px",fontSize:10,color:A,fontFamily:"'Courier New',monospace",fontWeight:700}}>{label}</div>}{children}</div>);
+      return(
+        <>
+          {glitch&&<GlitchEffect onDone={()=>setGlitch(false)}/>}
+          <div onClick={close} style={{position:"fixed",inset:0,zIndex:200,background:"rgba(0,0,0,0.88)",opacity:vis?1:0,transition:"opacity 0.4s ease"}}/>
+          <div style={{position:"fixed",left:0,right:0,bottom:0,zIndex:201,height:"92vh",background:PANEL,borderRadius:"12px 12px 0 0",border:`1px solid ${A}44`,borderBottom:"none",transform:vis?"translateY(0)":"translateY(100%)",transition:"transform 1.004s cubic-bezier(0.16,1,0.3,1)",display:"flex",flexDirection:"column",overflow:"hidden"}}>
+            <div style={{position:"absolute",top:0,left:"20%",right:"20%",height:"1px",background:`linear-gradient(90deg,transparent,${A},transparent)`,filter:"blur(1px)"}}/>
+            <div style={{height:"38%",flexShrink:0,position:"relative",overflow:"hidden",display:"flex",alignItems:"center",justifyContent:"center",background:"linear-gradient(160deg,#030d1f,#050a20)"}}>
+              {item.poster&&!isLink?<img src={item.poster} alt={item.title} style={{width:"100%",height:"100%",objectFit:"cover",position:"absolute",inset:0,opacity:0.6}}/>:<span style={{fontSize:130,opacity:0.06,color:A,userSelect:"none",fontFamily:"monospace"}}>{isLink?"⬢":CAT_ICONS[item.category]}</span>}
+              <div style={{position:"absolute",bottom:0,left:0,right:0,height:"65%",background:`linear-gradient(transparent,${PANEL})`}}/>
+              <button onClick={close} style={{position:"absolute",top:12,left:12,width:28,height:28,border:`1px solid ${A}44`,background:"rgba(3,6,15,0.8)",color:A,fontSize:12,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"monospace",zIndex:2}}>✕</button>
+              {(item.year||(isLink&&item.domain))&&<div style={{position:"absolute",top:12,right:12,border:`1px solid ${A}44`,background:`${A}10`,color:A,fontSize:9,padding:"3px 8px",fontFamily:"monospace",zIndex:2}}>{item.year||item.domain}</div>}
+              <div style={{position:"absolute",bottom:14,left:16,right:16,zIndex:2}}>
+                <h2 style={{fontSize:18,fontWeight:800,color:"#fff",margin:"0 0 4px",letterSpacing:"0.06em",fontFamily:"'Courier New',monospace",textShadow:`0 0 16px ${A}80`}}>{item.title.toUpperCase()}</h2>
+                {isLink&&item.url&&<div style={{fontSize:9,color:TEXT2,fontFamily:"monospace",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{item.url}</div>}
+              </div>
+            </div>
+            <div style={{flex:1,overflowY:"auto",padding:"20px 16px 0",scrollbarWidth:"none"}}>
+              {isLink&&item.url&&<button onClick={()=>window.open(item.url,"_blank")} style={{width:"100%",padding:"10px",border:`1px solid ${A}`,background:`${A}10`,color:A,fontSize:13,fontWeight:700,fontFamily:"monospace",marginBottom:14}}>[ ABRIR LINK ]</button>}
+              <HB label="GÉNERO"><div style={{display:"flex",gap:6,flexWrap:"wrap",alignItems:"center",paddingTop:6}}>{genres.length>0?genres.map(g=><span key={g} style={{padding:"4px 12px",border:`1px solid ${A}55`,background:`${A}10`,color:A,fontSize:11,fontFamily:"monospace",fontWeight:600}}>{g.toUpperCase()}</span>):<span style={{fontSize:11,color:TEXT2,fontFamily:"monospace"}}>N/A</span>}{!readOnly&&<button onClick={()=>setEditingGenre(v=>!v)} style={{width:24,height:24,border:`0.5px solid ${A}44`,background:"transparent",color:TEXT2,fontSize:12}}>✏️</button>}</div>{!readOnly&&editingGenre&&<div style={{display:"flex",gap:8,marginTop:10}}><input ref={genreRef} value={genre} onChange={e=>setGenre(e.target.value)} onKeyDown={e=>e.key==="Enter"&&setEditingGenre(false)} style={{flex:1,padding:"8px 10px",border:`1px solid ${A}`,background:SURFACE2,color:TEXT,fontSize:13,outline:"none",fontFamily:"monospace"}}/><button onClick={()=>setEditingGenre(false)} style={{padding:"8px 14px",border:"none",background:A,color:BG,fontSize:12,fontWeight:700,fontFamily:"monospace"}}>OK</button></div>}</HB>
+              {(item.plot||item.description)&&<HB label="DESCRIPCIÓN"><p style={{fontSize:13,color:TEXT2,lineHeight:1.8,margin:"8px 0 0",fontFamily:"monospace"}}>{item.plot||item.description}</p></HB>}
+              {!readOnly&&<HB label="NOTAS"><div style={{paddingTop:6}}>{!editingNotes?<div style={{display:"flex",alignItems:"flex-start",gap:8}}><p style={{flex:1,fontSize:12,color:notes?TEXT:TEXT3,fontFamily:"monospace",lineHeight:1.7,margin:0,minHeight:36}}>{notes||"// sin notas..."}</p><button onClick={()=>setEditingNotes(true)} style={{width:24,height:24,border:`0.5px solid ${A}44`,background:"transparent",color:TEXT2,fontSize:12,flexShrink:0}}>✏️</button></div>:<div><textarea ref={notesRef} value={notes} onChange={e=>setNotes(e.target.value)} rows={4} placeholder="// escribe tus notas..." style={{width:"100%",padding:"8px 10px",border:`1px solid ${A}`,background:SURFACE2,color:TEXT,fontSize:12,outline:"none",fontFamily:"monospace",resize:"none",lineHeight:1.7,boxSizing:"border-box"}}/><button onClick={()=>setEditingNotes(false)} style={{marginTop:6,padding:"6px 14px",border:"none",background:A,color:BG,fontSize:12,fontWeight:700,fontFamily:"monospace"}}>OK</button></div>}</div></HB>}
+              {!readOnly&&<HB label="ESTADO"><div style={{display:"flex",gap:8,paddingTop:8}}>{["Pendiente","Viendo","Visto"].map(s=>(<button key={s} onClick={()=>setStatus(s)} style={{flex:1,padding:"10px 0",border:status===s?`1.5px solid ${STATUS_COLOR[s]}`:"0.5px solid rgba(255,255,255,0.15)",background:status===s?`${STATUS_COLOR[s]}20`:"transparent",color:status===s?STATUS_COLOR[s]:"#8aaccc",fontSize:11,fontWeight:status===s?700:400,fontFamily:"monospace",display:"flex",alignItems:"center",justifyContent:"center",gap:6,transition:"all 0.15s",boxShadow:status===s?`0 0 10px ${STATUS_COLOR[s]}44`:"none"}}><span style={{width:8,height:8,borderRadius:1,background:STATUS_COLOR[s],boxShadow:status===s?`0 0 6px ${STATUS_COLOR[s]}`:"none"}}/>{s.toUpperCase()}</button>))}</div></HB>}
+              {!readOnly&&!isLink&&<HB label="VALORACIÓN" mb={20}><div style={{paddingTop:10,display:"flex",gap:8}}>{[1,2,3,4,5].map(s=><span key={s} onClick={()=>setRating(s)} style={{fontSize:26,color:s<=rating?A:"#2a4060",cursor:"pointer",textShadow:s<=rating?`0 0 10px ${A}`:"none"}}>{s<=rating?"◆":"◇"}</span>)}</div></HB>}
+            </div>
+            <div style={{padding:"10px 16px 32px",display:"flex",gap:10,flexShrink:0,borderTop:`0.5px solid ${BORDER}`}}>
+              {readOnly?<button onClick={()=>{onClone(item);close();}} style={{flex:1,padding:12,border:`1px solid ${A}`,background:`${A}18`,color:A,fontSize:14,fontWeight:700,fontFamily:"monospace",letterSpacing:"0.12em"}}>[ + AÑADIR A MI LISTA ]</button>:<><button onClick={()=>{onDelete(item.id);close();}} style={{width:44,height:44,border:"1px solid rgba(255,51,102,0.4)",background:"rgba(255,51,102,0.08)",color:"#ff3366",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>🗑</button><button onClick={save} style={{flex:1,padding:12,border:`1px solid ${A}`,background:`${A}18`,color:A,fontSize:14,fontWeight:700,fontFamily:"monospace",letterSpacing:"0.12em"}}>[ GUARDAR ]</button></>}
+            </div>
+          </div>
+        </>
+      );
+    }
 
-ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(App));
+    function UserProfileView({userData,onClose,onClone,A}){
+      const [vis,setVis]=useState(false);
+      const [activeTab,setActiveTab]=useState("Películas");
+      const [selectedItem,setSelectedItem]=useState(null);
+      useEffect(()=>{const t=setTimeout(()=>setVis(true),10);return()=>clearTimeout(t);},[]);
+      function close(){setVis(false);setTimeout(onClose,400);}
+      const{profile,items}=userData;
+      const filtered=items.filter(i=>i.category===activeTab);
+      return(
+        <>
+          <div onClick={close} style={{position:"fixed",inset:0,zIndex:300,background:"rgba(0,0,0,0.92)",opacity:vis?1:0,transition:"opacity 0.3s"}}/>
+          <div style={{position:"fixed",inset:0,zIndex:301,background:BG,transform:vis?"translateX(0)":"translateX(100%)",transition:"transform 0.4s cubic-bezier(0.16,1,0.3,1)",display:"flex",flexDirection:"column",overflow:"hidden"}}>
+            <div style={{padding:"14px 16px 0",background:PANEL2,borderBottom:`0.5px solid ${A}22`,flexShrink:0}}>
+              <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:14}}>
+                <button onClick={close} style={{width:28,height:28,border:`1px solid ${A}44`,background:"transparent",color:A,fontSize:12,fontFamily:"monospace",flexShrink:0}}>←</button>
+                {profile.photo?<img src={profile.photo} style={{width:44,height:44,objectFit:"cover",borderRadius:2,border:`1px solid ${A}44`}}/>:<div style={{width:44,height:44,background:SURFACE2,border:`1px solid ${A}33`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,color:TEXT3}}>👤</div>}
+                <div style={{flex:1}}><div style={{fontSize:14,fontWeight:800,color:TEXT,fontFamily:"'Courier New',monospace"}}>{profile.name||"SIN NOMBRE"}</div><div style={{fontSize:9,color:A,fontFamily:"monospace"}}>{profile.id}</div>{profile.bio&&<div style={{fontSize:10,color:TEXT2,fontFamily:"monospace",marginTop:2}}>{profile.bio}</div>}</div>
+                <div style={{textAlign:"center"}}><div style={{fontSize:20,fontWeight:800,color:A,fontFamily:"'Courier New',monospace"}}>{items.length}</div><div style={{fontSize:7,color:TEXT3,fontFamily:"monospace"}}>TÍTULOS</div></div>
+              </div>
+              <div style={{display:"flex",gap:0,overflowX:"auto",scrollbarWidth:"none"}}>
+                {CATEGORIES.map(c=><button key={c} onClick={()=>setActiveTab(c)} style={{flex:1,padding:"8px 4px",border:"none",borderBottom:activeTab===c?`2px solid ${A}`:"2px solid transparent",background:"transparent",color:activeTab===c?A:TEXT3,fontSize:9,fontFamily:"monospace",cursor:"pointer",whiteSpace:"nowrap"}}>{c==="Películas"?"PELIS":c==="Documentales"?"DOCS":c.toUpperCase()} ({items.filter(i=>i.category===c).length})</button>)}
+              </div>
+            </div>
+            <div style={{flex:1,overflowY:"auto",padding:"12px",scrollbarWidth:"none"}}>
+              {filtered.length===0?<div style={{textAlign:"center",padding:"48px 20px",color:TEXT3,fontFamily:"monospace",fontSize:12}}>// SIN TÍTULOS</div>:<div style={{display:"grid",gridTemplateColumns:activeTab==="Links"?"1fr":"repeat(3,1fr)",gap:8}}>{filtered.map((item,i)=>activeTab==="Links"?<LinkCard key={item.id} item={item} idx={i} onClick={()=>setSelectedItem(item)} A={A}/>:<ItemCard key={item.id} item={item} idx={i} onClick={()=>setSelectedItem(item)} A={A}/>)}</div>}
+            </div>
+            {selectedItem&&<DetailPanel item={selectedItem} onClose={()=>setSelectedItem(null)} onDelete={()=>{}} onUpdate={()=>{}} A={A} readOnly={true} onClone={onClone}/>}
+          </div>
+        </>
+      );
+    }
+
+    function ProfilePanel({profile,onSave,onClose,A,items,following,onFollowById,onOpenUser}){
+      const [name,setName]=useState(profile.name||"");
+      const [bio,setBio]=useState(profile.bio||"");
+      const [photo,setPhoto]=useState(profile.photo||null);
+      const [searchId,setSearchId]=useState("");
+      const [searching,setSearching]=useState(false);
+      const [searchErr,setSearchErr]=useState("");
+      const [vis,setVis]=useState(false);
+      const fileRef=useRef(null);
+      useEffect(()=>{const t=setTimeout(()=>setVis(true),10);return()=>clearTimeout(t);},[]);
+      function close(){setVis(false);setTimeout(onClose,400);}
+      function handlePhoto(e){const file=e.target.files?.[0];if(!file)return;const reader=new FileReader();reader.onload=ev=>setPhoto(ev.target.result);reader.readAsDataURL(file);}
+      async function handleFollow(){const id=searchId.trim().toUpperCase();if(!id)return;if(id===profile.id){setSearchErr("// ESE ERES TÚ");return;}setSearching(true);setSearchErr("");const user=await fetchUserById(id);setSearching(false);if(!user){setSearchErr("// ID NO ENCONTRADO");return;}onFollowById(user);setSearchId("");}
+      const HB=({label,children,mb=12})=>(<div style={{position:"relative",background:PANEL2,border:`0.5px solid ${A}33`,borderRadius:2,padding:"12px",marginBottom:mb}}>{label&&<div style={{position:"absolute",top:-9,left:10,background:PANEL2,padding:"0 6px",fontSize:10,color:A,fontFamily:"'Courier New',monospace",fontWeight:700}}>{label}</div>}{children}</div>);
+      return(
+        <>
+          <div onClick={close} style={{position:"fixed",inset:0,zIndex:200,background:"rgba(0,0,0,0.88)",opacity:vis?1:0,transition:"opacity 0.3s"}}/>
+          <div style={{position:"fixed",left:0,right:0,bottom:0,zIndex:201,height:"92vh",background:PANEL,borderRadius:"12px 12px 0 0",border:`1px solid ${A}44`,borderBottom:"none",transform:vis?"translateY(0)":"translateY(100%)",transition:"transform 0.45s cubic-bezier(0.16,1,0.3,1)",display:"flex",flexDirection:"column",overflow:"hidden"}}>
+            <div style={{position:"absolute",top:0,left:"20%",right:"20%",height:"1px",background:`linear-gradient(90deg,transparent,${A},transparent)`}}/>
+            <div style={{padding:"20px 16px 0",display:"flex",alignItems:"center",gap:14,flexShrink:0}}>
+              <div onClick={()=>fileRef.current?.click()} style={{cursor:"pointer",position:"relative",flexShrink:0}}>
+                {photo?<img src={photo} style={{width:64,height:64,objectFit:"cover",borderRadius:2,border:`1px solid ${A}66`,display:"block"}}/>:<div style={{width:64,height:64,border:`1px dashed ${A}55`,background:SURFACE2,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:4}}><span style={{fontSize:24,color:TEXT3}}>👤</span><span style={{fontSize:7,color:TEXT3,fontFamily:"monospace"}}>FOTO</span></div>}
+                <div style={{position:"absolute",bottom:-4,right:-4,width:16,height:16,background:A,display:"flex",alignItems:"center",justifyContent:"center",fontSize:9}}>✏️</div>
+              </div>
+              <input ref={fileRef} type="file" accept="image/*" onChange={handlePhoto} style={{display:"none"}}/>
+              <div style={{flex:1}}>
+                <div style={{fontSize:9,color:TEXT3,fontFamily:"monospace",marginBottom:2}}>// PERFIL</div>
+                <div style={{fontSize:15,fontWeight:800,color:name?TEXT:TEXT3,fontFamily:"'Courier New',monospace"}}>{name||"SIN NOMBRE"}</div>
+                {profile.id&&<div style={{fontSize:10,color:A,fontFamily:"monospace",marginTop:2,letterSpacing:"0.1em"}}>{profile.id}</div>}
+                {bio&&<div style={{fontSize:10,color:TEXT2,fontFamily:"monospace",marginTop:2}}>{bio}</div>}
+              </div>
+              <button onClick={close} style={{width:28,height:28,border:`1px solid ${A}44`,background:"transparent",color:A,fontSize:12,fontFamily:"monospace",flexShrink:0}}>✕</button>
+            </div>
+            <div style={{flex:1,overflowY:"auto",padding:"16px",scrollbarWidth:"none"}}>
+              <HB label="COLECCIÓN"><div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8,paddingTop:8}}>{[["TOTAL",items.length,A],["VISTOS",items.filter(i=>i.status==="Visto").length,"#00ff88"],["PELIS",items.filter(i=>i.category==="Películas").length,TEXT2],["SERIES",items.filter(i=>i.category==="Series").length,TEXT2]].map(([l,v,c])=>(<div key={l} style={{textAlign:"center"}}><div style={{fontSize:22,fontWeight:800,color:c,fontFamily:"'Courier New',monospace"}}>{v}</div><div style={{fontSize:7,color:TEXT3,fontFamily:"monospace",letterSpacing:"0.08em"}}>{l}</div></div>))}</div></HB>
+              <HB label="NOMBRE"><input value={name} onChange={e=>setName(e.target.value)} placeholder="// tu nombre..." style={{width:"100%",padding:"8px 10px",border:`1px solid ${A}44`,background:SURFACE2,color:TEXT,fontSize:13,outline:"none",fontFamily:"monospace",boxSizing:"border-box",marginTop:8}}/></HB>
+              <HB label="BIO"><textarea value={bio} onChange={e=>setBio(e.target.value)} rows={2} placeholder="// algo sobre ti..." style={{width:"100%",padding:"8px 10px",border:`1px solid ${A}44`,background:SURFACE2,color:TEXT,fontSize:12,outline:"none",fontFamily:"monospace",resize:"none",lineHeight:1.6,boxSizing:"border-box",marginTop:8}}/></HB>
+              <HB label="BUSCAR USUARIO">
+                <div style={{fontSize:9,color:TEXT3,fontFamily:"monospace",marginBottom:8,marginTop:6}}>// Introduce el ID de otro usuario (ej. MM-A3F2)</div>
+                <div style={{display:"flex",gap:8}}><input value={searchId} onChange={e=>setSearchId(e.target.value.toUpperCase())} onKeyDown={e=>e.key==="Enter"&&handleFollow()} placeholder="MM-XXXX" style={{flex:1,padding:"8px 10px",border:`1px solid ${A}44`,background:SURFACE2,color:TEXT,fontSize:13,outline:"none",fontFamily:"monospace",letterSpacing:"0.1em"}}/><button onClick={handleFollow} disabled={searching||!searchId.trim()} style={{padding:"8px 14px",border:`1px solid ${A}`,background:`${A}18`,color:A,fontSize:12,fontWeight:700,fontFamily:"monospace"}}>{searching?"...":"VER"}</button></div>
+                {searchErr&&<div style={{fontSize:10,color:"#ff3366",fontFamily:"monospace",marginTop:6}}>{searchErr}</div>}
+              </HB>
+              {following.length>0&&<HB label={`SIGUIENDO (${following.length})`}><div style={{display:"flex",flexDirection:"column",gap:8,paddingTop:8}}>{following.map(u=>(<div key={u.profile.id} onClick={()=>{onOpenUser(u);close();}} style={{display:"flex",alignItems:"center",gap:10,cursor:"pointer",padding:"8px",background:SURFACE2,border:`0.5px solid ${A}22`}}>{u.profile.photo?<img src={u.profile.photo} style={{width:32,height:32,objectFit:"cover",borderRadius:2}}/>:<div style={{width:32,height:32,background:PANEL,border:`0.5px solid ${A}33`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,color:TEXT3}}>👤</div>}<div style={{flex:1}}><div style={{fontSize:12,color:TEXT,fontFamily:"'Courier New',monospace",fontWeight:700}}>{u.profile.name||"SIN NOMBRE"}</div><div style={{fontSize:9,color:A,fontFamily:"monospace"}}>{u.profile.id} · {u.items.length} títulos</div></div><span style={{fontSize:10,color:TEXT3,fontFamily:"monospace"}}>→</span></div>))}</div></HB>}
+            </div>
+            <div style={{padding:"10px 16px 32px",flexShrink:0,borderTop:`0.5px solid ${BORDER}`}}>
+              <button onClick={()=>onSave({name,bio,photo})} style={{width:"100%",padding:12,border:`1px solid ${A}`,background:`${A}18`,color:A,fontSize:14,fontWeight:700,fontFamily:"monospace",letterSpacing:"0.12em"}}>[ GUARDAR Y PUBLICAR ]</button>
+              {profile.id&&<div style={{textAlign:"center",marginTop:8,fontSize:9,color:TEXT3,fontFamily:"monospace"}}>Tu ID: <span style={{color:A}}>{profile.id}</span></div>}
+            </div>
+          </div>
+        </>
+      );
+    }
+
+    function AddSheet({tab,setTab,onAdd,loading,onClose,A}){
+      const [mode,setMode]=useState(null);const [title,setTitle]=useState("");const [listening,setListening]=useState(false);const [voiceStatus,setVoiceStatus]=useState("");const inputRef=useRef(null);
+      useEffect(()=>{if(mode==="manual")setTimeout(()=>inputRef.current?.focus(),100);},[mode]);
+      function parseVoice(text){const t=text.toLowerCase();let cat=tab,tp=text;const map={"película":"Películas","pelicula":"Películas","serie":"Series","documental":"Documentales"};for(const[k,v]of Object.entries(map)){if(t.startsWith(k+" ")){cat=v;tp=text.slice(k.length+1).trim();break;}}return{cat,title:tp};}
+      function startVoice(){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){setVoiceStatus("// VOZ NO DISPONIBLE");return;}const rec=new SR();rec.lang="es-ES";rec.onstart=()=>{setListening(true);setVoiceStatus("// ESCUCHANDO...");};rec.onresult=async(e)=>{const spoken=e.results[0][0].transcript;setListening(false);setVoiceStatus(`// "${spoken}"`);const{cat,title:t}=parseVoice(spoken);setTab(cat);await onAdd(t,cat);};rec.onerror=()=>{setListening(false);setVoiceStatus("// ERROR");};rec.onend=()=>setListening(false);rec.start();}
+      return(
+        <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.9)",zIndex:100,display:"flex",alignItems:"flex-end"}}>
+          <div onClick={e=>e.stopPropagation()} style={{width:"100%",background:PANEL,borderRadius:"12px 12px 0 0",border:`1px solid ${A}44`,borderBottom:"none",padding:"16px 20px 44px",boxSizing:"border-box",position:"relative"}}>
+            <div style={{position:"absolute",top:0,left:"20%",right:"20%",height:"1px",background:`linear-gradient(90deg,transparent,${A},transparent)`}}/>
+            <div style={{width:36,height:2,background:SURFACE3,margin:"0 auto 20px"}}/>
+            {!mode?(<><div style={{fontSize:10,color:TEXT2,fontFamily:"monospace",marginBottom:4}}>// NUEVO REGISTRO</div><div style={{fontSize:16,fontWeight:700,marginBottom:20,color:TEXT,fontFamily:"'Courier New',monospace"}}>AÑADIR TÍTULO</div><div style={{display:"flex",gap:12}}>{[["MANUAL","✏️","Escribe",()=>setMode("manual")],["VOZ","🎙️","Di el título",()=>{setMode("voice");setTimeout(startVoice,200);}]].map(([lbl,ico,sub,fn])=>(<div key={lbl} onClick={fn} style={{flex:1,padding:"18px 10px",cursor:"pointer",background:PANEL2,border:`0.5px solid ${A}44`,borderRadius:2,display:"flex",flexDirection:"column",alignItems:"center",gap:8}}><span style={{fontSize:26}}>{ico}</span><span style={{fontSize:13,fontWeight:700,fontFamily:"monospace",color:A}}>{lbl}</span><span style={{fontSize:11,color:TEXT2,fontFamily:"monospace"}}>{sub}</span></div>))}</div></>)
+            :mode==="manual"?(<><button onClick={()=>setMode(null)} style={{background:"transparent",border:"none",color:TEXT2,fontSize:12,marginBottom:14,padding:0,fontFamily:"monospace"}}>← VOLVER</button><div style={{display:"flex",gap:6,marginBottom:16,overflowX:"auto",scrollbarWidth:"none"}}>{CATEGORIES.filter(c=>c!=="Links").map(c=><button key={c} onClick={()=>setTab(c)} style={{padding:"6px 12px",border:tab===c?`1px solid ${A}`:`0.5px solid ${BORDER}`,background:tab===c?`${A}18`:"transparent",color:tab===c?A:TEXT2,fontSize:11,whiteSpace:"nowrap",fontFamily:"monospace"}}>{c.toUpperCase()}</button>)}</div><input ref={inputRef} value={title} onChange={e=>setTitle(e.target.value)} onKeyDown={e=>e.key==="Enter"&&onAdd(title,tab)} placeholder="// NOMBRE DEL TÍTULO..." style={{width:"100%",padding:"13px 14px",border:`1px solid ${A}44`,background:SURFACE2,color:TEXT,fontSize:14,boxSizing:"border-box",marginBottom:10,outline:"none",fontFamily:"monospace"}}/><button onClick={()=>onAdd(title,tab)} disabled={loading||!title.trim()} style={{width:"100%",padding:13,border:`1px solid ${title.trim()?A:BORDER}`,background:title.trim()?`${A}18`:"transparent",color:title.trim()?A:TEXT3,fontSize:13,fontWeight:700,fontFamily:"monospace",letterSpacing:"0.1em"}}>{loading?"// BUSCANDO...":"[ AÑADIR ]"}</button></>)
+            :(<><button onClick={()=>{setMode(null);setVoiceStatus("");}} style={{background:"transparent",border:"none",color:TEXT2,fontSize:12,marginBottom:20,padding:0,fontFamily:"monospace"}}>← VOLVER</button><div style={{display:"flex",flexDirection:"column",alignItems:"center",padding:"12px 0"}}><div style={{width:72,height:72,display:"flex",alignItems:"center",justifyContent:"center",marginBottom:16,background:PANEL2,border:`0.5px solid ${listening?A:BORDER}`,boxShadow:listening?`0 0 20px ${A}44`:"none"}}><svg width="28" height="28" viewBox="0 0 24 24" fill={listening?A:TEXT3}><path d="M12 1a4 4 0 0 1 4 4v6a4 4 0 0 1-8 0V5a4 4 0 0 1 4-4zm0 2a2 2 0 0 0-2 2v6a2 2 0 0 0 4 0V5a2 2 0 0 0-2-2zm-1 15.93A8 8 0 0 1 4.07 13H6.1a6 6 0 0 0 11.8 0h2.03A8 8 0 0 1 13 18.93V21h2v2H9v-2h2v-2.07z"/></svg></div><div style={{fontSize:13,fontWeight:600,marginBottom:6,color:listening?A:TEXT,fontFamily:"monospace"}}>{listening?"// ESCUCHANDO...":"// EN ESPERA"}</div><div style={{fontSize:11,color:TEXT2,textAlign:"center",marginBottom:20,fontFamily:"monospace"}}>{voiceStatus||'// DI "PELÍCULA MATRIX"'}</div>{!listening&&<button onClick={startVoice} style={{padding:"10px 24px",border:`1px solid ${A}`,background:`${A}18`,color:A,fontSize:12,fontWeight:700,fontFamily:"monospace",letterSpacing:"0.1em"}}>[ REINTENTAR ]</button>}</div></>)}
+          </div>
+        </div>
+      );
+    }
+
+    function AddLinkSheet({onAdd,loading,onClose,A}){
+      const [url,setUrl]=useState("");const [tag,setTag]=useState("Otro");const inputRef=useRef(null);
+      useEffect(()=>{setTimeout(()=>inputRef.current?.focus(),100);},[]);
+      const tags=["Artículo","Vídeo","Herramienta","Tutorial","Noticia","Podcast","Música","Otro"];
+      return(
+        <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.9)",zIndex:100,display:"flex",alignItems:"flex-end"}}>
+          <div onClick={e=>e.stopPropagation()} style={{width:"100%",background:PANEL,borderRadius:"12px 12px 0 0",border:`1px solid ${A}44`,borderBottom:"none",padding:"16px 20px 44px",boxSizing:"border-box",position:"relative"}}>
+            <div style={{position:"absolute",top:0,left:"20%",right:"20%",height:"1px",background:`linear-gradient(90deg,transparent,${A},transparent)`}}/>
+            <div style={{width:36,height:2,background:SURFACE3,margin:"0 auto 20px"}}/>
+            <div style={{fontSize:10,color:TEXT2,fontFamily:"monospace",marginBottom:4}}>// NUEVO LINK</div>
+            <div style={{fontSize:16,fontWeight:700,marginBottom:16,color:TEXT,fontFamily:"'Courier New',monospace"}}>AÑADIR URL</div>
+            <input ref={inputRef} value={url} onChange={e=>setUrl(e.target.value)} onKeyDown={e=>e.key==="Enter"&&onAdd(url,"Links",tag)} placeholder="https://..." style={{width:"100%",padding:"13px 14px",border:`1px solid ${A}44`,background:SURFACE2,color:TEXT,fontSize:14,boxSizing:"border-box",marginBottom:12,outline:"none",fontFamily:"monospace"}}/>
+            <div style={{fontSize:10,color:TEXT2,fontFamily:"monospace",marginBottom:8}}>// TIPO</div>
+            <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:14}}>{tags.map(t=><button key={t} onClick={()=>setTag(t)} style={{padding:"6px 12px",border:tag===t?`1px solid ${A}`:`0.5px solid ${BORDER}`,background:tag===t?`${A}18`:"transparent",color:tag===t?A:TEXT2,fontSize:11,fontFamily:"monospace"}}>{t.toUpperCase()}</button>)}</div>
+            <button onClick={()=>onAdd(url,"Links",tag)} disabled={loading||!url.trim()} style={{width:"100%",padding:13,border:`1px solid ${url.trim()?A:BORDER}`,background:url.trim()?`${A}18`:"transparent",color:url.trim()?A:TEXT3,fontSize:13,fontWeight:700,fontFamily:"monospace",letterSpacing:"0.1em"}}>{loading?"// ANALIZANDO...":"[ GUARDAR LINK ]"}</button>
+          </div>
+        </div>
+      );
+    }
+
+    // ── APP ──────────────────────────────────────────────────────────────────
+
+    function App(){
+      const [items,setItems]=useState([]);const [tab,setTab]=useState("Películas");const [loading,setLoading]=useState(false);const [toast,setToast]=useState("");
+      const [showAdd,setShowAdd]=useState(false);const [showAddLink,setShowAddLink]=useState(false);const [showShare,setShowShare]=useState(false);const [showGenre,setShowGenre]=useState(false);const [showSettings,setShowSettings]=useState(false);const [showProfile,setShowProfile]=useState(false);
+      const [activeGenre,setActiveGenre]=useState("Todas");const [selected,setSelected]=useState(null);const [A,setA]=useState("#00d4ff");
+      const [profile,setProfile]=useState({name:"",bio:"",photo:null,id:null});const [following,setFollowing]=useState([]);const [viewingUser,setViewingUser]=useState(null);
+      const [glitches,setGlitches]=useState([]);const [fingerprints,setFingerprints]=useState([]);
+      const clickCountRef=useRef(0);const clickTimerRef=useRef(null);const shakeRef=useRef({lastX:null,lastY:null,lastT:null});const glitchFrameRef=useRef(null);
+
+      useEffect(()=>{
+        try{const v=localStorage.getItem("mm-accent");if(v)setA(v);}catch{}
+        try{const v=localStorage.getItem("media-items");if(v)setItems(JSON.parse(v));}catch{}
+        try{const v=localStorage.getItem("mm-profile");if(v)setProfile(JSON.parse(v));}catch{}
+        try{const v=localStorage.getItem("mm-following");if(v)setFollowing(JSON.parse(v));}catch{}
+      },[]);
+
+      function setAccent(c){setA(c);try{localStorage.setItem("mm-accent",c);}catch{}}
+      async function saveProfile(p){let id=profile.id;if(!id)id=genId();const np={...p,id};setProfile(np);try{localStorage.setItem("mm-profile",JSON.stringify(np));}catch{}setToast("// PUBLICANDO...");await publishProfile(np,items);setToast("// PERFIL PUBLICADO ✓");setTimeout(()=>setToast(""),2500);}
+      function save(list){setItems(list);try{localStorage.setItem("media-items",JSON.stringify(list));}catch{}if(profile.id)publishProfile(profile,list).catch(()=>{});}
+      function saveFollowing(list){setFollowing(list);try{localStorage.setItem("mm-following",JSON.stringify(list));}catch{}}
+      function handleFollowById(userData){const already=following.find(u=>u.profile.id===userData.profile.id);if(!already){saveFollowing([...following,userData]);setToast(`// SIGUIENDO A ${userData.profile.name||userData.profile.id}`);setTimeout(()=>setToast(""),2000);}setShowProfile(false);setViewingUser(userData);}
+      function handleClone(item){save([{...item,id:Date.now(),notes:"",status:"Pendiente",addedAt:Date.now()},...items]);setToast(`// "${item.title}" AÑADIDO ✓`);setTimeout(()=>setToast(""),2000);}
+
+      function triggerGlitch(intensity=1,originY=null){
+        if(glitchFrameRef.current)cancelAnimationFrame(glitchFrameRef.current);
+        const pct=originY!==null?(originY/window.innerHeight)*100:50;
+        const startTime=performance.now();const totalDur=140+intensity*200;
+        const sc=Array.from({length:Math.floor(5+intensity*7)},()=>({y:Math.max(0,Math.min(97,pct+(Math.random()-0.5)*70*intensity)),h:Math.random()<0.45?Math.random()*1.2+0.2:Math.random()<0.7?Math.random()*5+1:Math.random()*14+3,maxShift:(Math.random()-0.5)*90*intensity,kind:Math.random(),phase:Math.random()*Math.PI*2,freq:1.5+Math.random()*7}));
+        function frame(now){
+          const t=(now-startTime)/totalDur;if(t>=1){setGlitches([]);return;}
+          const env=t<0.06?t/0.06:Math.pow(1-((t-0.06)/0.94),0.55);
+          const slices=sc.map((s,i)=>{if(Math.sin(t*s.freq*Math.PI+s.phase)<=0.05)return null;const shift=s.maxShift*env*(0.6+0.4*Math.sin(t*s.freq*5+s.phase));const flicker=0.35+0.65*Math.abs(Math.sin(t*35+i*1.3));let bg,blend;if(s.kind<0.5){bg=`rgba(0,0,0,${Math.min(env*flicker*0.65,0.6)})`;blend="darken";}else if(s.kind<0.8){bg=`rgba(0,180,210,${Math.min(env*flicker*0.18,0.18)})`;blend="screen";}else{bg=`rgba(180,210,255,${Math.min(env*flicker*0.1,0.1)})`;blend="screen";}return{id:i,type:"slice",y:s.y,h:s.h,shift,bg,blend};}).filter(Boolean);
+          const ca=env*(4+intensity*8);
+          const rgbs=[{id:100,type:"rgb",ch:"r",shift:ca*(0.6+0.4*Math.sin(t*18)),op:Math.min(env*0.10,0.10)},{id:101,type:"rgb",ch:"b",shift:-ca*(0.7+0.3*Math.sin(t*15+1)),op:Math.min(env*0.09,0.09)},{id:102,type:"rgb",ch:"g",shift:ca*0.12*Math.sin(t*28),op:Math.min(env*0.04,0.04)}];
+          const tear=(Math.sin(t*55)*0.5+0.5)>0.93?[{id:200,type:"tear",y:pct+Math.sin(t*11)*18,h:1,op:Math.min(env*0.45,0.45)}]:[];
+          const block=intensity>1.2&&env>0.25&&Math.sin(t*3+1)>0.72?[{id:300,type:"block",y:pct+Math.sin(t*6)*12,h:6+intensity*5,shift:Math.sin(t*10)*50*intensity,op:Math.min(env*0.55,0.55)}]:[];
+          setGlitches([...slices,...rgbs,...tear,...block]);glitchFrameRef.current=requestAnimationFrame(frame);
+        }
+        glitchFrameRef.current=requestAnimationFrame(frame);
+      }
+
+      function handleEmptyClick(e){const x=e.clientX,y=e.clientY,id=Date.now()+Math.random();setFingerprints(f=>[...f,{id,x,y}]);setTimeout(()=>setFingerprints(f=>f.filter(p=>p.id!==id)),1800);clickCountRef.current+=1;clearTimeout(clickTimerRef.current);triggerGlitch(clickCountRef.current,y);clickTimerRef.current=setTimeout(()=>{clickCountRef.current=0;},1200);}
+
+      useEffect(()=>{
+        function handleMotion(e){const acc=e.accelerationIncludingGravity;if(!acc)return;const now=Date.now(),s=shakeRef.current;if(s.lastX===null){s.lastX=acc.x;s.lastY=acc.y;s.lastT=now;return;}const dt=(now-s.lastT)/1000;if(dt<0.05)return;const force=(Math.abs((acc.x||0)-s.lastX)+Math.abs((acc.y||0)-s.lastY))/dt;s.lastX=acc.x;s.lastY=acc.y;s.lastT=now;if(force>80)triggerGlitch(Math.min(force/40,5));}
+        window.addEventListener("devicemotion",handleMotion);return()=>window.removeEventListener("devicemotion",handleMotion);
+      },[]);
+
+      async function addItem(rawTitle,cat){if(!rawTitle.trim())return;setLoading(true);setToast("// BUSCANDO PORTADA...");const info=await fetchInfo(rawTitle.trim());save([{id:Date.now(),title:rawTitle.trim(),category:cat,year:info?.year||null,plot:info?.plot||null,genre:info?.genre||null,director:null,poster:info?.poster||null,rating:0,status:"Pendiente",notes:"",addedAt:Date.now()},...items]);setShowAdd(false);setLoading(false);setToast(info?.poster?"// PORTADA ENCONTRADA ✓":"// REGISTRADO");setTimeout(()=>setToast(""),2500);}
+      async function addLink(url,cat,tag){if(!url.trim())return;setLoading(true);setToast("// ANALIZANDO URL...");const info=await fetchLinkInfo(url.trim());let domain="";try{domain=new URL(url.trim()).hostname.replace("www.","");}catch{}save([{id:Date.now(),title:info?.title||url,description:info?.description||null,url:url.trim(),domain:info?.domain||domain,category:cat,genre:tag||info?.type||"Otro",poster:null,rating:0,status:"Pendiente",notes:"",addedAt:Date.now()},...items]);setShowAddLink(false);setLoading(false);setToast("// LINK GUARDADO ✓");setTimeout(()=>setToast(""),2000);}
+
+      const matchesGenre=(ig,f)=>{if(f==="Todas"||f==="Todos")return true;if(!ig)return false;const n=s=>s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[-\s]/g,"");const ff=n(f);return ig.split(/[,\/]/).map(g=>n(g.trim())).some(g=>g.includes(ff)||ff.includes(g));};
+      const filtered=items.filter(i=>i.category===tab&&matchesGenre(i.genre,activeGenre));
+      const stats={visto:filtered.filter(i=>i.status==="Visto").length,viendo:filtered.filter(i=>i.status==="Viendo").length,pendiente:filtered.filter(i=>i.status==="Pendiente"||!i.status).length};
+
+      return(
+        <div style={{maxWidth:390,margin:"0 auto",minHeight:"100vh",background:BG,display:"flex",flexDirection:"column",fontFamily:"system-ui,sans-serif",color:TEXT,position:"relative"}}>
+          <style>{`
+            @keyframes vhs-flicker{0%,100%{opacity:.025}50%{opacity:.04}}
+            @keyframes scanH{0%{transform:translateY(-100%)}100%{transform:translateY(100vh)}}
+            @keyframes cardPop{from{opacity:0;transform:scale(0.93)}to{opacity:1;transform:scale(1)}}
+            @keyframes fabGlow{0%,100%{opacity:0.8}50%{opacity:1}}
+            @keyframes fpFade{0%{opacity:0.18;transform:scale(0.6)}30%{opacity:0.18;transform:scale(1)}100%{opacity:0;transform:scale(1.1)}}
+            .card-item{animation:cardPop 0.35s cubic-bezier(0.16,1,0.3,1) both}
+            .fab-btn{animation:fabGlow 2s ease-in-out infinite}
+            .nav-btn:active{transform:scale(0.84);transition:transform 0.1s}
+            .fingerprint{animation:fpFade 1.8s ease-out forwards;position:fixed;pointer-events:none;z-index:9999}
+            .dot-bg{position:fixed;inset:0;pointer-events:none;z-index:0;background-color:#03060f;background-image:linear-gradient(rgba(0,212,255,0.06) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,0.06) 1px,transparent 1px);background-size:32px 32px}
+            .dot-bg::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(0,102,255,0.15) 0%,transparent 60%)}
+            .dot-bg::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 50% 45%,rgba(3,6,15,0.65) 0%,transparent 75%)}
+            .vhs-noise{position:fixed;inset:0;pointer-events:none;z-index:9997}
+            .vhs-noise::before{content:"";position:absolute;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");background-size:160px 160px;opacity:.022;mix-blend-mode:screen;animation:vhs-flicker 0.12s infinite}
+            .vhs-noise::after{content:"";position:absolute;left:0;width:100%;height:2px;background:rgba(0,212,255,0.03);animation:scanH 6s linear infinite}
+          `}</style>
+          <div className="dot-bg"/><div className="vhs-noise"/>
+          {fingerprints.map(p=>(<div key={p.id} className="fingerprint" style={{left:p.x-30,top:p.y-30,width:60,height:60}}><svg viewBox="0 0 60 60" width="60" height="60"><ellipse cx="30" cy="30" rx="8" ry="8" fill="none" stroke={A} strokeWidth="1.2"/><ellipse cx="30" cy="30" rx="13" ry="12" fill="none" stroke={A} strokeWidth="1"/><ellipse cx="30" cy="30" rx="18" ry="17" fill="none" stroke={A} strokeWidth="0.9"/><ellipse cx="30" cy="30" rx="23" ry="21" fill="none" stroke={A} strokeWidth="0.8"/><ellipse cx="30" cy="30" rx="27" ry="25" fill="none" stroke={A} strokeWidth="0.7"/><line x1="30" y1="22" x2="30" y2="5" stroke={A} strokeWidth="0.8"/><line x1="30" y1="38" x2="30" y2="55" stroke={A} strokeWidth="0.8"/></svg></div>))}
+          {glitches.map(g=>{if(g.type==="slice")return<div key={g.id} style={{position:"fixed",left:0,right:0,top:`${g.y}%`,height:`${g.h}px`,zIndex:9998,pointerEvents:"none",transform:`translateX(${g.shift}px)`,background:g.bg,mixBlendMode:g.blend}}/>;if(g.type==="rgb")return<div key={g.id} style={{position:"fixed",inset:0,zIndex:9997,pointerEvents:"none",transform:`translateX(${g.shift}px)`,background:g.ch==="r"?`rgba(255,0,40,${g.op})`:g.ch==="g"?`rgba(0,255,60,${g.op})`:`rgba(0,40,255,${g.op})`,mixBlendMode:"screen"}}/>;if(g.type==="tear")return<div key={g.id} style={{position:"fixed",left:0,right:0,top:`${g.y}%`,height:`${g.h}px`,zIndex:9999,pointerEvents:"none",background:`rgba(160,220,255,${g.op})`,mixBlendMode:"screen"}}/>;if(g.type==="block")return<div key={g.id} style={{position:"fixed",left:0,right:0,top:`${g.y}%`,height:`${g.h}px`,zIndex:9996,pointerEvents:"none",transform:`translateX(${g.shift}px)`,background:`rgba(0,0,0,${g.op})`,mixBlendMode:"darken"}}/>;return null;})}
+          {toast&&<div style={{position:"fixed",top:16,left:"50%",transform:"translateX(-50%)",background:`${A}18`,border:`1px solid ${A}`,color:A,padding:"8px 16px",fontSize:12,fontWeight:600,zIndex:400,whiteSpace:"nowrap",fontFamily:"monospace"}}>{toast}</div>}
+
+          <div style={{padding:"0 12px",zIndex:10,position:"relative"}}>
+            <div style={{position:"relative",background:PANEL2,border:`0.5px solid ${A}44`,padding:"12px 14px"}}>
+              <div style={{display:"flex",alignItems:"center",gap:10}}>
+                <LogoBase size={24} A={A}/>
+                <h1 style={{fontSize:13,fontWeight:800,margin:0,fontFamily:"'Courier New',monospace",letterSpacing:"0.18em"}}><span style={{color:TEXT}}>MENUDA</span><span style={{color:A,textShadow:`0 0 14px ${A}`,marginLeft:3}}>MOVIE</span></h1>
+                <div style={{flex:1}}/>
+                <div onClick={()=>setShowSettings(s=>!s)} style={{cursor:"pointer",color:showSettings?A:"#c8dff5",filter:showSettings?`drop-shadow(0 0 8px ${A})`:"none",transition:"filter 0.2s,color 0.2s"}}>
+                  <svg width="26" height="26" viewBox="0 0 16 16" style={{imageRendering:"pixelated",display:"block"}}>{[[0,0,0,1,1,1,1,1,0,0,0],[0,0,1,1,1,1,1,1,1,0,0],[0,1,1,1,0,0,0,1,1,1,0],[1,1,1,0,0,0,0,0,1,1,1],[1,1,0,0,0,0,0,0,0,1,1],[1,1,0,0,0,0,0,0,0,1,1],[1,1,0,0,0,0,0,0,0,1,1],[1,1,1,0,0,0,0,0,1,1,1],[0,1,1,1,0,0,0,1,1,1,0],[0,0,1,1,1,1,1,1,1,0,0],[0,0,0,1,1,1,1,1,0,0,0]].map((row,y)=>row.map((cell,x)=>cell?<rect key={`${x}-${y}`} x={x+2.5} y={y+2.5} width={1} height={1} fill="currentColor"/>:null))}{[[1,1,1],[1,0,1],[1,1,1]].map((row,y)=>row.map((cell,x)=>cell?<rect key={`c${x}-${y}`} x={x+6.5} y={y+6.5} width={1} height={1} fill="currentColor"/>:null))}</svg>
+                </div>
+                <div onClick={()=>{setShowProfile(true);setShowSettings(false);}} style={{cursor:"pointer",marginLeft:10}}>{profile.photo?<img src={profile.photo} style={{width:38,height:38,borderRadius:2,objectFit:"cover",border:`1px solid ${A}66`,display:"block"}}/>:<div style={{width:38,height:38,border:`1px solid ${A}44`,background:SURFACE2,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,color:TEXT3}}>👤</div>}</div>
+              </div>
+            </div>
+            {showSettings&&(<div style={{background:PANEL2,border:`0.5px solid ${A}44`,borderTop:"none",padding:"14px"}}><div style={{fontSize:9,color:TEXT3,fontFamily:"monospace",letterSpacing:"0.14em",marginBottom:12}}>// ACENTO</div><div style={{display:"flex",gap:8}}>{ACCENTS.map(ac=>(<button key={ac.color} onClick={()=>{setAccent(ac.color);setShowSettings(false);}} style={{flex:1,padding:"10px 0",border:A===ac.color?`1.5px solid ${ac.color}`:`0.5px solid ${ac.color}44`,background:A===ac.color?`${ac.color}18`:"transparent",display:"flex",flexDirection:"column",alignItems:"center",gap:6,transition:"all 0.15s"}}><div style={{width:20,height:20,borderRadius:10,background:ac.color,boxShadow:A===ac.color?`0 0 10px ${ac.color}`:""}}/><span style={{fontSize:8,fontFamily:"monospace",color:A===ac.color?ac.color:TEXT3,letterSpacing:"0.08em"}}>{ac.name}</span></button>))}</div></div>)}
+          </div>
+
+          <div style={{padding:"14px 12px 8px",zIndex:10,position:"relative"}}>
+            <div style={{position:"relative",background:PANEL2,border:`0.5px solid ${A}44`,borderRadius:2,padding:"8px 12px"}}>
+              <div style={{position:"absolute",top:-9,left:10,background:PANEL2,padding:"0 6px",fontSize:10,color:A,fontFamily:"'Courier New',monospace",fontWeight:700}}>STATUS</div>
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",paddingTop:4}}>
+                <div style={{display:"flex",gap:14}}>{[["VISTO","#00ff88"],["VIENDO",A],["PENDIENTE","#ff3366"]].map(([s,c])=>(<div key={s} style={{display:"flex",alignItems:"center",gap:5}}><div style={{width:7,height:7,background:c,boxShadow:`0 0 5px ${c}`}}/><span style={{fontSize:10,color:TEXT2,fontFamily:"monospace"}}>{s} <span style={{color:"#fff",fontWeight:700}}>{stats[s.toLowerCase()]}</span></span></div>))}</div>
+                <div style={{display:"flex",gap:6}}>
+                  <button onClick={()=>setShowGenre(true)} style={{width:28,height:28,border:`1px solid ${activeGenre!=="Todas"&&activeGenre!=="Todos"?A:BORDER}`,background:activeGenre!=="Todas"&&activeGenre!=="Todos"?`${A}22`:"transparent",color:activeGenre!=="Todas"&&activeGenre!=="Todos"?A:TEXT2,display:"flex",alignItems:"center",justifyContent:"center"}}><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M4 6h16v2H4zm2 5h12v2H6zm3 5h6v2H9z"/></svg></button>
+                  <button onClick={()=>setShowShare(true)} style={{width:28,height:28,border:`1px solid ${BORDER}`,background:"transparent",color:TEXT2,display:"flex",alignItems:"center",justifyContent:"center"}}><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/></svg></button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style={{flex:1,padding:"0 12px 110px",position:"relative",zIndex:10}} onClick={filtered.length===0?handleEmptyClick:undefined}>
+            {filtered.length===0?<div style={{position:"relative",background:PANEL2,border:`0.5px solid ${TEXT3}44`,borderRadius:2,padding:"48px 20px",textAlign:"center",marginTop:8}}><div style={{fontSize:36,marginBottom:12,opacity:0.1,color:A}}>{CAT_ICONS[tab]}</div><div style={{fontSize:12,color:TEXT2,fontFamily:"monospace"}}>// SIN REGISTROS</div><div style={{fontSize:11,color:TEXT3,marginTop:4,fontFamily:"monospace"}}>PULSA + PARA AÑADIR</div></div>:<div style={{display:"grid",gridTemplateColumns:tab==="Links"?"1fr":"repeat(3,1fr)",gap:8,paddingTop:2}}>{filtered.map((item,i)=>tab==="Links"?<LinkCard key={item.id} item={item} idx={i} onClick={()=>setSelected(item)} A={A}/>:<ItemCard key={item.id} item={item} idx={i} onClick={()=>setSelected(item)} A={A}/>)}</div>}
+          </div>
+
+          <div style={{position:"fixed",bottom:80,left:"50%",transform:"translateX(-50%)",zIndex:50}}>
+            <button onClick={()=>tab==="Links"?setShowAddLink(true):setShowAdd(true)} className="fab-btn" style={{width:64,height:64,background:`${A}18`,border:`1px solid ${A}`,color:A,fontSize:tab==="Links"?22:32,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"monospace",boxShadow:`0 0 20px ${A}44`}}>{tab==="Links"?"⬢":"+"}</button>
+          </div>
+
+          <div style={{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:390,zIndex:10,padding:"6px 12px 14px",boxSizing:"border-box",background:"rgba(3,6,15,0.95)",backdropFilter:"blur(10px)",borderTop:`0.5px solid ${BORDER}`}}>
+            <div style={{display:"flex",gap:6}}>{CATEGORIES.map(c=>(<button key={c} onClick={()=>{setTab(c);setActiveGenre("Todas");}} className="nav-btn" style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:3,border:tab===c?`1px solid ${A}44`:"1px solid transparent",background:tab===c?`${A}10`:"transparent",color:tab===c?A:TEXT3,padding:"6px 0",position:"relative",transition:"all 0.2s",borderRadius:2}}>{tab===c&&<div style={{position:"absolute",top:0,left:"10%",right:"10%",height:"1px",background:A,boxShadow:`0 0 4px ${A}`}}/>}<PixelIcon grid={PIXEL_GRIDS[c]} size={18}/><span style={{fontSize:7,fontWeight:tab===c?700:400,fontFamily:"monospace",letterSpacing:"0.04em"}}>{c==="Películas"?"PELIS":c==="Documentales"?"DOCS":c.toUpperCase()}</span></button>))}</div>
+          </div>
+
+          {showGenre&&<div onClick={()=>setShowGenre(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.9)",zIndex:100,display:"flex",alignItems:"flex-end"}}><div onClick={e=>e.stopPropagation()} style={{width:"100%",background:PANEL,borderRadius:"12px 12px 0 0",border:`1px solid ${A}44`,borderBottom:"none",padding:"16px 16px 44px",boxSizing:"border-box"}}><div style={{width:36,height:2,background:SURFACE3,margin:"0 auto 16px"}}/><div style={{fontSize:10,color:TEXT2,fontFamily:"monospace",marginBottom:14}}>// FILTRAR</div><div style={{display:"flex",flexWrap:"wrap",gap:7}}>{GENRES[tab].map(g=><button key={g} onClick={()=>{setActiveGenre(g);setShowGenre(false);}} style={{padding:"7px 12px",border:activeGenre===g?`1px solid ${A}`:`0.5px solid ${BORDER}`,background:activeGenre===g?`${A}18`:"transparent",color:activeGenre===g?A:TEXT2,fontSize:11,fontFamily:"monospace"}}>{g.toUpperCase()}</button>)}</div></div></div>}
+          {showShare&&<div onClick={()=>setShowShare(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.9)",zIndex:100,display:"flex",alignItems:"flex-end"}}><div onClick={e=>e.stopPropagation()} style={{width:"100%",background:PANEL,borderRadius:"12px 12px 0 0",border:`1px solid ${A}44`,borderBottom:"none",padding:"16px 16px 40px",boxSizing:"border-box"}}><div style={{width:36,height:2,background:SURFACE3,margin:"0 auto 16px"}}/><div style={{fontSize:15,fontWeight:700,marginBottom:16,fontFamily:"monospace",color:TEXT}}>{tab.toUpperCase()} — {filtered.length} REG.</div><button onClick={()=>{exportToPDF(items,tab);setShowShare(false);}} style={{width:"100%",padding:13,border:`1px solid ${A}44`,background:SURFACE2,color:TEXT,fontSize:13,marginBottom:8,fontFamily:"monospace"}}>[ EXPORTAR PDF ]</button><button onClick={()=>{shareWhatsApp(items,tab);setShowShare(false);}} style={{width:"100%",padding:13,border:`1px solid ${A}44`,background:SURFACE2,color:TEXT,fontSize:13,fontFamily:"monospace"}}>[ WHATSAPP ]</button></div></div>}
+
+          {showProfile&&<ProfilePanel profile={profile} onSave={p=>{saveProfile(p);setShowProfile(false);}} onClose={()=>setShowProfile(false)} A={A} items={items} following={following} onFollowById={handleFollowById} onOpenUser={u=>{setViewingUser(u);}}/>}
+          {viewingUser&&<UserProfileView userData={viewingUser} onClose={()=>setViewingUser(null)} onClone={handleClone} A={A}/>}
+          {showAdd&&<AddSheet tab={tab} setTab={setTab} onAdd={addItem} loading={loading} onClose={()=>setShowAdd(false)} A={A}/>}
+          {showAddLink&&<AddLinkSheet onAdd={addLink} loading={loading} onClose={()=>setShowAddLink(false)} A={A}/>}
+          {selected&&<DetailPanel item={selected} onClose={()=>setSelected(null)} onDelete={id=>save(items.filter(i=>i.id!==id))} onUpdate={updated=>save(items.map(i=>i.id===updated.id?updated:i))} A={A}/>}
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
   </script>
 </body>
 </html>
